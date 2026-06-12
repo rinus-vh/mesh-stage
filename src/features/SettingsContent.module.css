@@ -1,0 +1,140 @@
+.component {
+  height: 100%;
+  padding: var(--size-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-16);
+  overflow-y: auto;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  & > .sectionTitleLayout {
+    opacity: 0.5;
+  }
+}
+
+.resetButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-20);
+  height: var(--size-20);
+  border: none;
+  border-radius: var(--radius-4);
+  background: none;
+  color: var(--color);
+  cursor: pointer;
+  opacity: 0.45;
+  transition-property: opacity, background-color;
+  transition-duration: var(--duration-150);
+
+  &:hover {
+    opacity: 1;
+    background-color: color-mix(in srgb, var(--color) 10%, transparent);
+  }
+}
+
+.componentSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-8);
+  padding-bottom: var(--size-16);
+  border-bottom: 1px solid color-mix(in srgb, var(--color) 10%, transparent);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  & > .sectionBody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-8);
+  }
+}
+
+.axisRow {
+  display: flex;
+  gap: var(--size-16);
+  align-items: flex-start;
+}
+
+.axisCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--size-4);
+}
+
+.knobRow {
+  display: flex;
+  gap: var(--size-16);
+  align-items: flex-start;
+}
+
+.sliderRow {
+  position: relative;
+
+  & > .sliderDot {
+    position: absolute;
+    top: 50%;
+    left: calc(-1 * var(--size-12));
+    transform: translateY(-50%);
+  }
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: var(--size-8);
+}
+
+.component_rootSettingsButton {
+  width: var(--size-24);
+  height: var(--size-24);
+}
+
+.componentSettingsButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-4);
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--color) 20%, transparent);
+  color: var(--color);
+  cursor: pointer;
+  opacity: 0.6;
+  transition-property: opacity, background-color;
+  transition-duration: var(--duration-150);
+
+  &:hover {
+    opacity: 1;
+    background-color: color-mix(in srgb, var(--color) 8%, transparent);
+  }
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.colorInput {
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--color) 20%, transparent);
+  border-radius: var(--radius-4);
+  cursor: pointer;
+  padding: 2px;
+  background: none;
+}

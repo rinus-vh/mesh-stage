@@ -1,0 +1,277 @@
+.component {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--size-8);
+  padding: var(--size-8) var(--size-12);
+  border-bottom: 1px solid color-mix(in srgb, var(--color) 10%, transparent);
+
+  & > .snapWrapper {
+    position: relative;
+  }
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-28);
+  height: var(--size-28);
+  border-radius: var(--radius-4);
+  border: none;
+  background: none;
+  color: var(--color);
+  cursor: pointer;
+  opacity: 0.7;
+  transition-property: opacity, background-color;
+  transition-duration: var(--duration-150);
+
+  &:hover {
+    opacity: 1;
+    background-color: color-mix(in srgb, var(--color) 10%, transparent);
+  }
+}
+
+.iconBtnActive {
+  opacity: 1;
+  color: var(--interaction-color);
+  background-color: color-mix(in srgb, var(--interaction-color) 15%, transparent);
+}
+
+.snapWrapper {
+  & > .snapTooltip {
+    position: absolute;
+    top: calc(100% + var(--size-4));
+    left: 50%;
+    z-index: 20;
+    display: none;
+  }
+
+  &:hover > .snapTooltip {
+    display: block;
+  }
+}
+
+.snapTooltip {
+  transform: translateX(-50%);
+  background-color: var(--surface-color);
+  color: var(--color);
+  border: 1px solid color-mix(in srgb, var(--color) 16%, transparent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+  padding: var(--size-4) var(--size-8);
+  border-radius: var(--radius-4);
+  pointer-events: none;
+}
+
+.iconBtnRecord {
+  opacity: 1;
+  color: #e53e3e;
+  background-color: color-mix(in srgb, #e53e3e 15%, transparent);
+}
+
+.confirmBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-16);
+}
+
+.confirmText {
+  margin: 0;
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--size-8);
+}
+
+.iconBtnDanger {
+  margin-left: auto;
+
+  &:hover {
+    color: #e53e3e;
+    background-color: color-mix(in srgb, #e53e3e 15%, transparent);
+    opacity: 1;
+  }
+}
+
+.time {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.6;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: auto;
+
+  & > .labels {
+    width: 120px;
+    flex-shrink: 0;
+  }
+
+  & > .lanes {
+    flex: 1;
+  }
+}
+
+/* ── Track labels column ──────────────────────────────────────────────────── */
+
+.labels {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid color-mix(in srgb, var(--color) 10%, transparent);
+}
+
+.rulerSpacer {
+  height: var(--size-24);
+  flex-shrink: 0;
+}
+
+.trackLabel {
+  height: var(--size-32);
+  display: flex;
+  align-items: center;
+  gap: var(--size-4);
+  padding: 0 var(--size-8) 0 var(--size-12);
+  font-size: 0.75rem;
+  opacity: 0.8;
+
+  & > .trackLabelText {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.trackLabelMuted {
+  opacity: 0.4;
+}
+
+.trackReactivate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-16);
+  height: var(--size-16);
+  border-radius: var(--radius-4);
+  border: none;
+  background: none;
+  color: var(--color);
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity var(--duration-150);
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.laneMuted {
+  & > .keyframe {
+    opacity: 0.25;
+  }
+}
+
+/* ── Lanes (scrollable, playhead overlay) ─────────────────────────────────── */
+
+.lanes {
+  position: relative;
+  min-width: 240px;
+
+  & > .bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+  }
+}
+
+.bar {
+  background-color: color-mix(in srgb, var(--color) 4%, transparent);
+  pointer-events: none;
+}
+
+.ruler {
+  position: relative;
+  height: var(--size-24);
+  cursor: ew-resize;
+  touch-action: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--color) 10%, transparent);
+}
+
+.tick {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.625rem;
+  opacity: 0.4;
+  pointer-events: none;
+  user-select: none;
+}
+
+.lane {
+  position: relative;
+  height: var(--size-32);
+  border-bottom: 1px solid color-mix(in srgb, var(--color) 6%, transparent);
+}
+
+.keyframe {
+  position: absolute;
+  top: 50%;
+  width: var(--size-12);
+  height: var(--size-12);
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color) 50%, transparent);
+  background-color: color-mix(in srgb, var(--color) 70%, transparent);
+  transform: translate(-50%, -50%) rotate(45deg);
+  border-radius: var(--radius-4);
+  cursor: grab;
+  touch-action: none;
+  transition: background-color var(--duration-150), border-color var(--duration-150);
+
+  &:hover {
+    background-color: var(--color);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.keyframeSelected {
+  background-color: var(--interaction-color);
+  border-color: var(--interaction-color);
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background-color: var(--interaction-color);
+  pointer-events: none;
+}
+
+.marquee {
+  position: absolute;
+  border: 1px solid var(--interaction-color);
+  background-color: color-mix(in srgb, var(--interaction-color) 12%, transparent);
+  pointer-events: none;
+  z-index: 1;
+}

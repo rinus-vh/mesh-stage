@@ -1,0 +1,12 @@
+.component {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--size-16);
+
+  & > .uploadLayout {
+    flex: 1;
+    max-width: 400px;
+  }
+}

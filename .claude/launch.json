@@ -4,8 +4,8 @@
     {
       "name": "vite-dev",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["start"],
-      "port": 5173
+      "runtimeArgs": ["start", "--", "--port", "5175"],
+      "port": 5175
     }
   ]
 }
