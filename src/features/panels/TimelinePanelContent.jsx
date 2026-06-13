@@ -16,7 +16,7 @@ const RPAD = 32
 export function TimelinePanelContent() {
   const {
     tracks, playhead, playing, loop, duration, recording, selectedKeyframes,
-    toggle, setLoop, setRecording, setPlayhead, setTrackMuted, clearAllTracks,
+    toggle, pause, setLoop, setRecording, setPlayhead, setTrackMuted, clearAllTracks,
     selectKeyframe, moveSelectedKeyframes, selectKeyframesInBox, clearSelection,
   } = useTimeline()
 
@@ -31,6 +31,8 @@ export function TimelinePanelContent() {
     resetModelSettings(MODEL_DEFAULTS)
     resetCamera()
     resetRotation()
+    pause()
+    setPlayhead(0)
     setConfirmOpen(false)
   }
 

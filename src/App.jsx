@@ -60,10 +60,11 @@ export default function App() {
 // Syncs the background colour with the active theme whenever the user hasn't
 // overridden it manually.
 function ThemeBackgroundSync({ isDark }) {
-  const { resetToThemeBackground } = useModelSettings()
+  const { resetToThemeBackground, resetToThemeGroundPlane } = useModelSettings()
   React.useEffect(() => {
     resetToThemeBackground(isDark ? '#111111' : '#ffffff')
-  }, [isDark, resetToThemeBackground])
+    resetToThemeGroundPlane(isDark ? '#ffffff' : '#000000')
+  }, [isDark, resetToThemeBackground, resetToThemeGroundPlane])
   return null
 }
 
@@ -221,7 +222,7 @@ function AppPanels({ isDark }) {
           minimizable
           title='Export'
           minWidth={4}
-          minHeight={3}
+          minHeight={4}
           onClose={exportP.close}
           onMinimize={exportP.minimize}
         >

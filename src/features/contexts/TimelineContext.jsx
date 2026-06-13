@@ -20,8 +20,8 @@ function makeRotationSeed() {
     label: 'Rotation Y',
     muted: false,
     keyframes: [
-      { id: nextId(), time: 0, value: 0 },
-      { id: nextId(), time: DEFAULT_DURATION, value: Math.PI * 2 },
+      { id: nextId(), time: 0, value: -Math.PI },
+      { id: nextId(), time: DEFAULT_DURATION, value: Math.PI },
     ],
   }
 }
@@ -109,12 +109,15 @@ export function TimelineProvider({ children }) {
   }, [])
 
   const addOrUpdateKeyframe = useCallback((path, label, time, value) => {
-    setTracks(prev => {
-      const t = Math.max(0, Math.min(MAX_TIME, time))
-      const idx = prev.findIndex(tr => tr.path === path)
-      if (idx === -1) {
-        return [...prev, { id: `track_${path.replace(/\W/g, '_')}`, path, label, muted: false, keyframes: [{ id: nextId(), time: t, value }] }]
-      }
+    const t = Math.max(0, Math.min(MAX_TIME, time))
+    // Compute synchronously against the always-current ref so the rAF loop
+    // sees the change on its very next tick, before React re-renders.
+    const prev = tracksRef.current
+    const idx = prev.findIndex(tr => tr.path === path)
+    let next
+    if (idx === -1) {
+      next = [...prev, { id: `track_${path.replace(/\W/g, '_')}`, path, label, muted: false, keyframes: [{ id: nextId(), time: t, value }] }]
+    } else {
       const track = prev[idx]
       const existing = track.keyframes.findIndex(k => Math.abs(k.time - t) < EPSILON)
       let keyframes
@@ -123,10 +126,11 @@ export function TimelineProvider({ children }) {
       } else {
         keyframes = [...track.keyframes, { id: nextId(), time: t, value }].sort((a, b) => a.time - b.time)
       }
-      const next = [...prev]
+      next = [...prev]
       next[idx] = { ...track, keyframes }
-      return next
-    })
+    }
+    tracksRef.current = next
+    setTracks(next)
   }, [])
 
   const recordingRef = useRef(recording)
@@ -146,6 +150,10 @@ export function TimelineProvider({ children }) {
         return prev
       })
       addOrUpdateKeyframe(path, label, playheadRef.current, value)
+      // Immediately reflect the new value in liveSample so the controlled knob
+      // doesn't snap back while waiting for the rAF to resample the updated track.
+      sampleRef.current = { ...sampleRef.current, [path]: value }
+      setLiveSample(s => ({ ...s, [path]: value }))
       return true
     }
     // Recording OFF: if a non-muted track exists for this path, mute it.

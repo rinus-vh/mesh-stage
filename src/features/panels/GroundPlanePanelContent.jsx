@@ -1,11 +1,12 @@
 import { PanelContainer, PanelContainerDivider, Checkbox, ColorInput } from '@6njp/prototype-library'
 
 import { useAnimatableModelSettings } from '../contexts/useAnimatable.js'
+import { MODEL_DEFAULTS } from '../contexts/ModelSettingsContext.jsx'
 import { AnimatableRow } from './AnimatableRow.jsx'
 
 export function GroundPlanePanelContent() {
   const { modelSettings, update } = useAnimatableModelSettings()
-  const groundPlane = modelSettings.groundPlane ?? { solid: false, color: '#444444', receiveShadows: true }
+  const groundPlane = modelSettings.groundPlane ?? MODEL_DEFAULTS.groundPlane
 
   const updatePlane = patch => update({ groundPlane: { ...groundPlane, ...patch } })
 

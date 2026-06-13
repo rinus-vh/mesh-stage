@@ -40,9 +40,9 @@ function deepEqual(a, b) {
 export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpenMaterial, onOpenTexture, onOpenBumpMap, onOpenExport, onOpenGroundPlane }) {
   // Effective (animated) settings for display; base for dirty checks / resets.
   const { modelSettings, update } = useAnimatableModelSettings()
-  const { modelSettings: base, update: baseUpdate, backgroundIsDefault, resetBackground } = useModelSettings()
+  const { modelSettings: base, update: baseUpdate, backgroundIsDefault, resetBackground, groundPlaneColorIsDefault, resetGroundPlane } = useModelSettings()
   const { rotation, setAxisDeg, resetRotation } = useRotation()
-  const { zoom, orbitX, orbitY, height, handleZoomChange, handleOrbitChange, handleHeightChange, resetCamera } = useCamera()
+  const { zoom, orbitX, orbitY, height, handleZoomChange, handleOrbitChange, handleHeightChange, resetCamera, controlsRef } = useCamera()
   const { tracks, record, liveSample, removeTrack } = useTimeline()
 
   const themeDefaultBg = isDark ? '#111111' : '#ffffff'
@@ -74,11 +74,19 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
 
   const isSceneDirty = (
     !backgroundIsDefault ||
-    SCENE_SECTION_KEYS.some(k =>
-      typeof MODEL_DEFAULTS[k] === 'object'
+    !groundPlaneColorIsDefault ||
+    SCENE_SECTION_KEYS.some(k => {
+      if (k === 'groundPlane') {
+        // Color is tracked separately via groundPlaneColorIsDefault; only compare
+        // the non-color fields here to avoid false positives from theme switching.
+        const { color: _a, ...baseRest } = base.groundPlane ?? {}
+        const { color: _b, ...defaultRest } = MODEL_DEFAULTS.groundPlane
+        return !deepEqual(baseRest, defaultRest)
+      }
+      return typeof MODEL_DEFAULTS[k] === 'object'
         ? !deepEqual(base[k], MODEL_DEFAULTS[k])
         : base[k] !== MODEL_DEFAULTS[k]
-    )
+    })
   )
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -121,15 +129,21 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
   const handleResetCamera = () => {
     resetCamera()
     clearTracks(['camera'])
+    if (controlsRef.current) {
+      controlsRef.current.target.set(0, 0, 0)
+      controlsRef.current.update()
+    }
   }
 
   const handleResetScene = () => {
+    const themeDefaultGroundPlaneColor = isDark ? '#ffffff' : '#000000'
     baseUpdate({
       showGroundPlane: MODEL_DEFAULTS.showGroundPlane,
-      groundPlane: MODEL_DEFAULTS.groundPlane,
+      groundPlane: { ...MODEL_DEFAULTS.groundPlane, color: themeDefaultGroundPlaneColor },
       gravity: MODEL_DEFAULTS.gravity,
     })
     resetBackground(themeDefaultBg)
+    resetGroundPlane(themeDefaultGroundPlaneColor)
     clearTracks(['model.backgroundColor', 'model.showGroundPlane', 'model.groundPlane', 'model.gravity'])
   }
 

@@ -71,12 +71,14 @@ export function ViewCanvas({ modelRef, modelUrl }) {
   // Height shifts the orbit target (and camera in tandem) along Y so the radius is preserved.
   useEffect(() => {
     if (!controlsRef.current) return
+    isUpdatingFromKnobs.current = true
     const controls = controlsRef.current
     const prevY = controls.target.y
     const delta = height - prevY
     controls.target.set(0, height, 0)
     controls.object.position.y += delta
     controls.update()
+    isUpdatingFromKnobs.current = false
   }, [height, controlsRef])
 
   useEffect(() => {

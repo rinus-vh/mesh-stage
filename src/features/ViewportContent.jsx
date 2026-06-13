@@ -13,10 +13,10 @@ export function ViewportContent({ modelUrl, modelRef, onFile }) {
     return (
       <div className={styles.component}>
         <FileUpload
-          onFile={onFile}
           label='Drop FBX model here'
           accept={['.fbx']}
           layoutClassName={styles.uploadLayout}
+          {...{ onFile }}
         />
       </div>
     )

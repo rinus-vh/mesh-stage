@@ -26,7 +26,7 @@ export function LightingPanelContent() {
         value={modelSettings.lightStrength}
         onChange={v => update({ lightStrength: v })}
         min={0}
-        max={10}
+        max={15}
         step={0.1}
         label='Strength'
       />
