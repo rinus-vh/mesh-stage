@@ -37,7 +37,7 @@ export default function App() {
         <CameraProvider>
           <TimelineProvider>
             <MinimizedPanelsProvider>
-              <main style={themeVariables} className={styles.app}>
+              <main style={themeVariables} className={styles.container}>
                 <Header
                   title='Mesh Stage'
                   logo={Box}
