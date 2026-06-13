@@ -132,7 +132,7 @@ function AppPanels({ isDark }) {
           minHeight={10}
           onMinimize={viewport.minimize}
         >
-          <ViewportContent modelUrl={modelUrl} modelRef={modelRef} onFile={handleModelFile} />
+          <ViewportContent onFile={handleModelFile} {...{ modelRef, modelUrl }} />
         </Panel>
       )}
 
