@@ -5,7 +5,7 @@ import {
   Grid, Header, Panel,
   MinimizedPanelsProvider, MinimizedPanelsMenu, usePanelManager,
 } from '@6njp/prototype-library'
-import { getThemeVariables } from '@6njp/prototype-library/machinery'
+import { getThemeVariables, ThemeProvider } from '@6njp/prototype-library/machinery'
 
 import { ModelSettingsProvider, useModelSettings } from '@/features/contexts/ModelSettingsContext.jsx'
 import { ViewCanvas } from '@/features/ViewCanvas.jsx'
@@ -27,35 +27,37 @@ import styles from './App.module.css'
 
 export default function App() {
   const [isDark, setIsDark] = React.useState(true)
-  const themeVariables = getThemeVariables(isDark ? 'dark' : 'light')
+  const theme = isDark ? 'dark' : 'light'
 
   return (
-    <ModelSettingsProvider>
-      <ThemeBackgroundSync {...{ isDark }} />
+    <ThemeProvider {...{ theme }}>
+      <ModelSettingsProvider>
+        <ThemeBackgroundSync {...{ isDark }} />
 
-      <RotationProvider>
-        <CameraProvider>
-          <TimelineProvider>
-            <MinimizedPanelsProvider>
-              <main style={themeVariables} className={styles.container}>
-                <Header
-                  title='Mesh Stage'
-                  logo={Box}
-                  onToggleTheme={() => setIsDark(prev => !prev)}
-                  layoutClassName={styles.headerLayout}
-                  {...{ isDark }}
-                />
-                <Grid layoutClassName={styles.gridLayout}>
-                  <AppPanels {...{ isDark }} />
-                </Grid>
+        <RotationProvider>
+          <CameraProvider>
+            <TimelineProvider>
+              <MinimizedPanelsProvider>
+                <main style={getThemeVariables(theme)} className={styles.container}>
+                  <Header
+                    title='Mesh Stage'
+                    logo={Box}
+                    onToggleTheme={() => setIsDark(prev => !prev)}
+                    layoutClassName={styles.headerLayout}
+                    {...{ isDark }}
+                  />
+                  <Grid layoutClassName={styles.gridLayout}>
+                    <AppPanels {...{ isDark }} />
+                  </Grid>
 
-                <MinimizedPanelsMenu layoutClassName={styles.minimizedMenuLayout} />
-              </main>
-            </MinimizedPanelsProvider>
-          </TimelineProvider>
-        </CameraProvider>
-      </RotationProvider>
-    </ModelSettingsProvider>
+                  <MinimizedPanelsMenu layoutClassName={styles.minimizedMenuLayout} />
+                </main>
+              </MinimizedPanelsProvider>
+            </TimelineProvider>
+          </CameraProvider>
+        </RotationProvider>
+      </ModelSettingsProvider>
+    </ThemeProvider>
   )
 }
 
