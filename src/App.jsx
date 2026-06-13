@@ -31,7 +31,8 @@ export default function App() {
 
   return (
     <ModelSettingsProvider>
-      <ThemeBackgroundSync isDark={isDark} />
+      <ThemeBackgroundSync {...{ isDark }} />
+
       <RotationProvider>
         <CameraProvider>
           <TimelineProvider>
@@ -45,8 +46,9 @@ export default function App() {
                   {...{ isDark }}
                 />
                 <Grid layoutClassName={styles.gridLayout}>
-                  <AppPanels isDark={isDark} />
+                  <AppPanels {...{ isDark }} />
                 </Grid>
+
                 <MinimizedPanelsMenu layoutClassName={styles.minimizedMenuLayout} />
               </main>
             </MinimizedPanelsProvider>
@@ -96,7 +98,7 @@ function AppPanels({ isDark }) {
        */}
       {!viewport.visible && modelUrl && createPortal(
         <div style={{ position: 'fixed', left: '-400px', top: 0, width: '200px', height: '200px', visibility: 'hidden', pointerEvents: 'none' }}>
-          <ViewCanvas modelRef={modelRef} modelUrl={modelUrl} />
+          <ViewCanvas {...{ modelRef, modelUrl }} />
         </div>,
         document.body,
       )}
@@ -110,7 +112,6 @@ function AppPanels({ isDark }) {
           onMinimize={settings.minimize}
         >
           <SettingsContent
-            isDark={isDark}
             onOpenWireframe={wireframe.open}
             onOpenLighting={lighting.open}
             onOpenMaterial={material.open}
@@ -118,6 +119,7 @@ function AppPanels({ isDark }) {
             onOpenBumpMap={bumpMap.open}
             onOpenExport={exportP.open}
             onOpenGroundPlane={groundPlane.open}
+            {...{ isDark }}
           />
         </Panel>
       )}
