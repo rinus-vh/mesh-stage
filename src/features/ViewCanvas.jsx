@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { Suspense, useEffect, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, Environment } from '@react-three/drei'
 
 import { useCamera } from './contexts/CameraContext.jsx'
 import { useTimeline } from './contexts/TimelineContext.jsx'
@@ -46,10 +46,13 @@ export function ViewCanvas({ modelRef, modelUrl }) {
   const hasCameraTracks = tracks.some(t => t.path.startsWith('camera.') && !t.muted)
 
   useEffect(() => {
-    if (sceneRef.current) {
+    if (!sceneRef.current) return
+    if (modelSettings.transparentBackground) {
+      sceneRef.current.background = null
+    } else {
       sceneRef.current.background = new THREE.Color(modelSettings.backgroundColor)
     }
-  }, [modelSettings.backgroundColor])
+  }, [modelSettings.backgroundColor, modelSettings.transparentBackground])
 
   // Manual orbit knob → camera (only relevant when the timeline isn't driving the camera).
   useEffect(() => {
@@ -102,7 +105,7 @@ export function ViewCanvas({ modelRef, modelUrl }) {
           cameraRef.current = camera
           sceneRef.current = scene
           glRef.current = gl
-          scene.background = new THREE.Color(modelSettings.backgroundColor)
+          scene.background = modelSettings.transparentBackground ? null : new THREE.Color(modelSettings.backgroundColor)
         }}
       >
         <ambientLight intensity={0.5} />
@@ -117,6 +120,10 @@ export function ViewCanvas({ modelRef, modelUrl }) {
             castShadow={modelSettings.shadows}
             shadow-mapSize={[2048, 2048]}
           />
+        )}
+
+        {modelSettings.materialPreset === 'chrome' && (
+          <Environment preset='studio' />
         )}
 
         <Suspense fallback={null}>

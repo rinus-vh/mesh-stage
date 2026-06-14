@@ -39,7 +39,7 @@ export function TimelineProvider({ children }) {
   const [playhead, setPlayheadState] = useState(0)
   const [playing, setPlaying] = useState(true)
   const [loop, setLoop] = useState(true)
-  const [fps] = useState(30)
+  const [fps, setFps] = useState(30)
   const [selectedKeyframes, setSelectedKeyframes] = useState(() => new Set())
   const [anchorKeyframe, setAnchorKeyframe] = useState(null) // {trackId, keyframeId} — SHIFT range anchor
   const [recording, setRecording] = useState(false)
@@ -387,7 +387,7 @@ export function TimelineProvider({ children }) {
     record, addOrUpdateKeyframe, removeKeyframe, removeTrack, clearAllTracks, moveSelectedKeyframes, removeSelected,
     copySelected, pasteKeyframes,
     selectKeyframe, selectKeyframesInBox, clearSelection,
-    setPlayhead, play, pause, toggle, setLoop, setRecording, setTrackMuted,
+    setPlayhead, play, pause, toggle, setLoop, setRecording, setTrackMuted, setFps,
   }
 
   return <TimelineContext.Provider value={value}>{children}</TimelineContext.Provider>

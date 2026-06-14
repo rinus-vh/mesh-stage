@@ -8,13 +8,13 @@ export function WireframePanelContent() {
 
   return (
     <PanelContainer>
-      <AnimatableRow label='Enabled' path='model.wireframe'>
+      <AnimatableRow label='Enabled' path='model.wireframe' value={modelSettings.wireframe}>
         <Checkbox checked={modelSettings.wireframe} onChange={v => update({ wireframe: v })} />
       </AnimatableRow>
 
       <PanelContainerDivider />
 
-      <AnimatableRow label='Color' path='model.wireframeColor'>
+      <AnimatableRow label='Color' path='model.wireframeColor' value={modelSettings.wireframeColor ?? '#00ffcc'}>
         <ColorInput
           value={modelSettings.wireframeColor ?? '#00ffcc'}
           onChange={v => update({ wireframeColor: v })}

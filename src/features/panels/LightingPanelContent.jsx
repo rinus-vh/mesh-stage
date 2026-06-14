@@ -8,17 +8,17 @@ export function LightingPanelContent() {
 
   return (
     <PanelContainer>
-      <AnimatableRow label='Enabled' path='model.lighting'>
+      <AnimatableRow label='Enabled' path='model.lighting' value={modelSettings.lighting}>
         <Checkbox checked={modelSettings.lighting} onChange={value => update({ lighting: value })} />
       </AnimatableRow>
 
       <PanelContainerDivider />
 
-      <AnimatableRow label='Shadows' path='model.shadows'>
+      <AnimatableRow label='Shadows' path='model.shadows' value={modelSettings.shadows}>
         <Checkbox checked={modelSettings.shadows} onChange={value => update({ shadows: value })} />
       </AnimatableRow>
 
-      <AnimatableRow label='Color' path='model.lightColor'>
+      <AnimatableRow label='Color' path='model.lightColor' value={modelSettings.lightColor}>
         <ColorInput value={modelSettings.lightColor} onChange={value => update({ lightColor: value })} />
       </AnimatableRow>
 

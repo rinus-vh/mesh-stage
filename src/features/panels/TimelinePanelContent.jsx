@@ -1,8 +1,10 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { useDrag } from '@use-gesture/react'
-import { Play, Pause, Repeat, Dot, RotateCcw, Magnet, Trash2 } from 'lucide-react'
+import { Play, Pause, Repeat, Dot, RotateCcw, Magnet, Trash2, Settings } from 'lucide-react'
+import { useFloating, offset, flip, shift, useDismiss, useInteractions, FloatingPortal, useTransitionStyles } from '@floating-ui/react'
 
 import { Modal, Button } from '@6njp/prototype-library'
+import { useThemeVariables } from '@6njp/prototype-library/machinery'
 
 import { useTimeline, selKey } from '../contexts/TimelineContext.jsx'
 import { useModelSettings, MODEL_DEFAULTS } from '../contexts/ModelSettingsContext.jsx'
@@ -15,9 +17,9 @@ const RPAD = 32
 
 export function TimelinePanelContent() {
   const {
-    tracks, playhead, playing, loop, duration, recording, selectedKeyframes,
+    tracks, playhead, playheadRef, playing, loop, fps, duration, recording, selectedKeyframes,
     toggle, pause, setLoop, setRecording, setPlayhead, setTrackMuted, clearAllTracks,
-    selectKeyframe, moveSelectedKeyframes, selectKeyframesInBox, clearSelection,
+    selectKeyframe, moveSelectedKeyframes, selectKeyframesInBox, clearSelection, setFps,
   } = useTimeline()
 
   const { update: resetModelSettings } = useModelSettings()
@@ -42,16 +44,69 @@ export function TimelinePanelContent() {
 
   const [shiftHeld, setShiftHeld] = useState(false)
 
+  // ── Timeline zoom (pinch / ctrl+wheel) ────────────────────────────────────────
+  const [zoom, setZoom] = useState(1)           // 1x = fit-all; up to 16x
+  const scrollerRef = useRef(null)              // the horizontally-scrollable lanes wrapper
+
+  const handleZoomWheel = useCallback((e) => {
+    if (!e.ctrlKey && !e.metaKey) return
+    e.preventDefault()
+    e.stopPropagation()
+    // Pinch on trackpad fires as ctrl+wheel with small delta
+    const factor = e.deltaY < 0 ? 1.12 : 0.89
+    setZoom(prev => Math.max(1, Math.min(16, prev * factor)))
+  }, [])
+
+  useEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    el.addEventListener('wheel', handleZoomWheel, { passive: false })
+    return () => el.removeEventListener('wheel', handleZoomWheel)
+  }, [handleZoomWheel])
+
+  // ── Timeline settings popover ─────────────────────────────────────────────────
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const themeVariables = useThemeVariables()
+
+  const { refs: settingsRefs, floatingStyles: settingsFloatingStyles, context: settingsContext } = useFloating({
+    open: settingsOpen,
+    onOpenChange: setSettingsOpen,
+    placement: 'bottom-end',
+    middleware: [offset(6), flip(), shift({ padding: 8 })],
+  })
+  const settingsDismiss = useDismiss(settingsContext)
+  const { getReferenceProps: getSettingsRefProps, getFloatingProps: getSettingsFloatingProps } = useInteractions([settingsDismiss])
+  const { isMounted: settingsMounted, styles: settingsTransition } = useTransitionStyles(settingsContext, {
+    common: { opacity: 0, transform: 'translateY(-4px)' },
+    open:   { opacity: 1, transform: 'translateY(0)' },
+    duration: { open: 100, close: 80 },
+  })
+
   // Shift temporarily inverts snap — button always shows the effective state.
   const effectiveSnap = snap !== shiftHeld
 
-  // Global keyboard shortcuts: spacebar = play/pause, Shift tracking for snap indicator.
+  // Mutable ref mirrors so the keydown closure always reads the latest values.
+  const fpsRef = useRef(fps)
+  fpsRef.current = fps
+  const snapEffectiveRef = useRef(effectiveSnap)
+  snapEffectiveRef.current = effectiveSnap
+
+  // Global keyboard shortcuts: spacebar = play/pause, arrows = frame step, Shift tracking.
   useEffect(() => {
     const onKeyDown = (e) => {
       if (e.key === 'Shift') { setShiftHeld(true); return }
-      if (e.key === ' ') {
-        const tag = document.activeElement?.tagName
-        if (tag !== 'INPUT' && tag !== 'TEXTAREA') { e.preventDefault(); toggle() }
+      const tag = document.activeElement?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+
+      if (e.key === ' ') { e.preventDefault(); toggle(); return }
+
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault()
+        // Snap on → move 1 second; snap off → move 1 frame (1/fps).
+        const step = snapEffectiveRef.current ? 1 : 1 / fpsRef.current
+        // playheadRef is the live mutable ref from context (always current).
+        setPlayhead(playheadRef.current + (e.key === 'ArrowRight' ? step : -step))
+        return
       }
     }
     const onKeyUp = (e) => { if (e.key === 'Shift') setShiftHeld(false) }
@@ -61,7 +116,7 @@ export function TimelinePanelContent() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup',   onKeyUp)
     }
-  }, [toggle])
+  }, [toggle, setPlayhead])
 
   const lanesRef = useRef(null)
   const [marquee, setMarquee] = useState(null) // {x1,y1,x2,y2} px relative to lanes
@@ -209,6 +264,15 @@ export function TimelinePanelContent() {
         </div>
         <span className={styles.time}>{playhead.toFixed(2)}s / {duration.toFixed(2)}s</span>
         <button
+          ref={settingsRefs.setReference}
+          type='button'
+          className={cx(styles.iconBtn, settingsOpen && styles.iconBtnActive)}
+          title='Timeline settings'
+          {...getSettingsRefProps({ onClick: () => setSettingsOpen(o => !o) })}
+        >
+          <Settings size={14} />
+        </button>
+        <button
           type='button'
           className={cx(styles.iconBtn, styles.iconBtnDanger)}
           onClick={() => setConfirmOpen(true)}
@@ -240,8 +304,9 @@ export function TimelinePanelContent() {
           ))}
         </div>
 
-        {/* Lanes — ruler + keyframe rows + playhead + marquee */}
-        <div className={styles.lanes} ref={lanesRef} {...bindMarquee()}>
+        {/* Lanes — horizontally scrollable + zoomable */}
+        <div className={styles.lanesScroller} ref={scrollerRef}>
+        <div className={styles.lanes} ref={lanesRef} style={{ width: zoom > 1 ? `${zoom * 100}%` : '100%' }} {...bindMarquee()}>
           {/* Alternating second bars — visual grid, rendered first so they sit under everything */}
           {duration > 0 && Array.from({ length: Math.ceil(duration) }, (_, i) => i)
             .filter(i => i % 2 === 0)
@@ -303,8 +368,36 @@ export function TimelinePanelContent() {
             />
           )}
         </div>
+        </div>{/* end lanesScroller */}
       </div>
     </div>
+
+    {settingsMounted && (
+      <FloatingPortal>
+        <div
+          ref={settingsRefs.setFloating}
+          style={{ ...themeVariables, ...settingsFloatingStyles, zIndex: 200 }}
+          {...getSettingsFloatingProps()}
+        >
+          <div className={styles.settingsPopover} style={settingsTransition}>
+            <p className={styles.settingsLabel}>Frame rate</p>
+            <div className={styles.fpsToggle}>
+              {[24, 30].map(f => (
+                <button
+                  key={f}
+                  type='button'
+                  className={cx(styles.fpsBtn, fps === f && styles.fpsBtnActive)}
+                  onClick={() => setFps(f)}
+                  title={`${f} frames per second`}
+                >
+                  {f} fps
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </FloatingPortal>
+    )}
 
     <Modal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)} title='Clear timeline'>
       <div className={styles.confirmBody}>

@@ -17,6 +17,8 @@ export const MODEL_DEFAULTS = {
   gravity: false,
   texture: { enabled: false, url: '', scale: 1, repeat: { x: 1, y: 1 }, offset: { x: 0, y: 0 } },
   bumpMap: { enabled: false, url: '', strength: 0.5 },
+  materialPreset: 'custom',
+  transparentBackground: false,
 }
 
 // Theme defaults that diverge from MODEL_DEFAULTS (which uses the dark theme value).

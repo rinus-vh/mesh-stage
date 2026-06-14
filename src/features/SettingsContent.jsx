@@ -191,12 +191,12 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
 
       <Section title='Model' dirty={isModelDirty} onReset={handleResetModel}>
         <PanelContainer>
-          <AnimatableRow label='Wireframe' path='model.wireframe'>
+          <AnimatableRow label='Wireframe' path='model.wireframe' value={modelSettings.wireframe}>
             <Checkbox checked={modelSettings.wireframe} onChange={v => update({ wireframe: v })} />
             <SettingsButton onClick={onOpenWireframe} title='Wireframe settings' />
           </AnimatableRow>
 
-          <AnimatableRow label='Lighting' path='model.lighting'>
+          <AnimatableRow label='Lighting' path='model.lighting' value={modelSettings.lighting}>
             <Checkbox checked={modelSettings.lighting} onChange={v => update({ lighting: v })} />
             <SettingsButton onClick={onOpenLighting} title='Lighting settings' />
           </AnimatableRow>
@@ -278,14 +278,21 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
 
       <Section title='Scene' dirty={isSceneDirty} onReset={handleResetScene}>
         <PanelContainer>
-          <AnimatableRow label='Background' path='model.backgroundColor'>
+          <PanelContainerSettingsRow label='Transparent'>
+            <Checkbox
+              checked={modelSettings.transparentBackground ?? false}
+              onChange={v => update({ transparentBackground: v })}
+            />
+          </PanelContainerSettingsRow>
+
+          <AnimatableRow label='Background' path='model.backgroundColor' value={modelSettings.backgroundColor}>
             <ColorInput
               value={modelSettings.backgroundColor}
               onChange={v => update({ backgroundColor: v })}
             />
           </AnimatableRow>
 
-          <AnimatableRow label='Ground plane' path='model.showGroundPlane'>
+          <AnimatableRow label='Ground plane' path='model.showGroundPlane' value={modelSettings.showGroundPlane}>
             <Checkbox checked={modelSettings.showGroundPlane} onChange={value => update({ showGroundPlane: value })} />
             <SettingsButton onClick={onOpenGroundPlane} title='Ground plane settings' />
           </AnimatableRow>
