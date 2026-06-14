@@ -37,7 +37,7 @@ function sampleAll(tracks, time) {
 export function TimelineProvider({ children }) {
   const [tracks, setTracks] = useState(() => [makeRotationSeed()])
   const [playhead, setPlayheadState] = useState(0)
-  const [playing, setPlaying] = useState(true)
+  const [playing, setPlaying] = useState(false)
   const [loop, setLoop] = useState(true)
   const [fps, setFps] = useState(30)
   const [selectedKeyframes, setSelectedKeyframes] = useState(() => new Set())

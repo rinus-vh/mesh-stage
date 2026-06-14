@@ -57,11 +57,15 @@ export function ViewCanvas({ modelRef, modelUrl }) {
   // Manual orbit knob → camera (only relevant when the timeline isn't driving the camera).
   useEffect(() => {
     if (hasCameraTracks || !controlsRef.current || isUpdatingFromKnobs.current) return
-    isUpdatingFromKnobs.current = true
     const controls = controlsRef.current
     const camera = controls.object
-    // Offset from target (not world origin) so radius stays correct
     const offset = camera.position.clone().sub(controls.target)
+    const sph = new THREE.Spherical().setFromVector3(offset)
+    const currentOrbitX = THREE.MathUtils.radToDeg(sph.theta)
+    const currentOrbitY = 90 - THREE.MathUtils.radToDeg(sph.phi)
+    // Skip if OrbitControls already positioned the camera here (avoids feedback jitter).
+    if (Math.abs(currentOrbitX - orbitX) < 0.01 && Math.abs(currentOrbitY - orbitY) < 0.01) return
+    isUpdatingFromKnobs.current = true
     const radius = offset.length()
     const theta = THREE.MathUtils.degToRad(orbitX)
     const phi   = THREE.MathUtils.degToRad(90 - orbitY)
@@ -86,8 +90,11 @@ export function ViewCanvas({ modelRef, modelUrl }) {
 
   useEffect(() => {
     if (hasCameraTracks || !controlsRef.current || isUpdatingFromKnobs.current) return
-    isUpdatingFromKnobs.current = true
     const camera = controlsRef.current.object
+    const currentZoom = 11 - camera.position.length()
+    // Skip if OrbitControls already positioned the camera here (avoids feedback jitter).
+    if (Math.abs(currentZoom - zoom) < 0.001) return
+    isUpdatingFromKnobs.current = true
     const dir = camera.position.clone().normalize()
     camera.position.copy(dir.multiplyScalar(11 - zoom))
     controlsRef.current.update()
@@ -95,7 +102,7 @@ export function ViewCanvas({ modelRef, modelUrl }) {
   }, [zoom, controlsRef, hasCameraTracks])
 
   return (
-    <div className={styles.viewCanvas_root}>
+    <div className={cx(styles.viewCanvas_root, modelSettings.transparentBackground && styles.isTransparent)}>
       <Canvas
         camera={{ position: [0, 0, 11 - zoom], fov: 50 }}
         gl={{ preserveDrawingBuffer: true, alpha: true }}
@@ -143,6 +150,7 @@ export function ViewCanvas({ modelRef, modelUrl }) {
           ref={controlsRef}
           enabled={!hasCameraTracks}
           enableDamping={false}
+          enablePan={false}
           minDistance={1}
           maxDistance={10}
           onChange={() => {

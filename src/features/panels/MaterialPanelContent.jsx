@@ -1,6 +1,7 @@
 import { PanelContainer, PanelContainerSettingsRow, PanelContainerDivider, Slider, ColorInput, Dropdown } from '@6njp/prototype-library'
 
 import { useAnimatableModelSettings } from '../contexts/useAnimatable.js'
+import { MODEL_DEFAULTS } from '../contexts/ModelSettingsContext.jsx'
 import { AnimatableRow } from './AnimatableRow.jsx'
 
 const PRESETS = [
@@ -26,7 +27,7 @@ export function MaterialPanelContent() {
 
       <PanelContainerDivider />
 
-      <AnimatableRow label='Color' path='model.color' value={modelSettings.color}>
+      <AnimatableRow label='Color' path='model.color' value={modelSettings.color} defaultValue={MODEL_DEFAULTS.color} onReset={() => update({ color: MODEL_DEFAULTS.color })}>
         <ColorInput value={modelSettings.color} onChange={value => update({ color: value })} disabled={isChrome || wireframe} />
       </AnimatableRow>
 

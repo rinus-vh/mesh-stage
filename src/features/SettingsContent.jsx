@@ -1,7 +1,9 @@
-import { Settings, RotateCcw } from 'lucide-react'
+import { Settings, Trash2 } from 'lucide-react'
 import {
   PanelContainer, PanelContainerSettingsRow, PanelContainerDivider,
-  Knob, Slider, Checkbox, LabelUppercaseSm, ColorInput,
+  PanelContainerSettingsSectionHeader,
+  ActionIconButton,
+  GhostButton, Knob, Slider, Checkbox, ColorInput,
 } from '@6njp/prototype-library'
 
 import { useRotation, ROTATION_DEFAULTS } from './contexts/RotationContext.jsx'
@@ -37,7 +39,7 @@ function deepEqual(a, b) {
   return ka.every(k => deepEqual(a[k], b[k]))
 }
 
-export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpenMaterial, onOpenTexture, onOpenBumpMap, onOpenExport, onOpenGroundPlane }) {
+export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpenMaterial, onOpenTexture, onOpenBumpMap, onOpenExport, onOpenGroundPlane, onDiscardModel }) {
   // Effective (animated) settings for display; base for dirty checks / resets.
   const { modelSettings, update } = useAnimatableModelSettings()
   const { modelSettings: base, update: baseUpdate, backgroundIsDefault, resetBackground, groundPlaneColorIsDefault, resetGroundPlane } = useModelSettings()
@@ -191,12 +193,12 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
 
       <Section title='Model' dirty={isModelDirty} onReset={handleResetModel}>
         <PanelContainer>
-          <AnimatableRow label='Wireframe' path='model.wireframe' value={modelSettings.wireframe}>
+          <AnimatableRow label='Wireframe' path='model.wireframe' value={modelSettings.wireframe} defaultValue={MODEL_DEFAULTS.wireframe} onReset={() => update({ wireframe: MODEL_DEFAULTS.wireframe })}>
             <Checkbox checked={modelSettings.wireframe} onChange={v => update({ wireframe: v })} />
             <SettingsButton onClick={onOpenWireframe} title='Wireframe settings' />
           </AnimatableRow>
 
-          <AnimatableRow label='Lighting' path='model.lighting' value={modelSettings.lighting}>
+          <AnimatableRow label='Lighting' path='model.lighting' value={modelSettings.lighting} defaultValue={MODEL_DEFAULTS.lighting} onReset={() => update({ lighting: MODEL_DEFAULTS.lighting })}>
             <Checkbox checked={modelSettings.lighting} onChange={v => update({ lighting: v })} />
             <SettingsButton onClick={onOpenLighting} title='Lighting settings' />
           </AnimatableRow>
@@ -225,6 +227,7 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
             label='Resolution'
           />
         </div>
+
       </Section>
 
       <Section title='Camera' dirty={isCameraDirty} onReset={handleResetCamera}>
@@ -285,14 +288,14 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
             />
           </PanelContainerSettingsRow>
 
-          <AnimatableRow label='Background' path='model.backgroundColor' value={modelSettings.backgroundColor}>
+          <AnimatableRow label='Background' path='model.backgroundColor' value={modelSettings.backgroundColor} defaultValue={MODEL_DEFAULTS.backgroundColor} onReset={() => update({ backgroundColor: MODEL_DEFAULTS.backgroundColor })}>
             <ColorInput
               value={modelSettings.backgroundColor}
               onChange={v => update({ backgroundColor: v })}
             />
           </AnimatableRow>
 
-          <AnimatableRow label='Ground plane' path='model.showGroundPlane' value={modelSettings.showGroundPlane}>
+          <AnimatableRow label='Ground plane' path='model.showGroundPlane' value={modelSettings.showGroundPlane} defaultValue={MODEL_DEFAULTS.showGroundPlane} onReset={() => update({ showGroundPlane: MODEL_DEFAULTS.showGroundPlane })}>
             <Checkbox checked={modelSettings.showGroundPlane} onChange={value => update({ showGroundPlane: value })} />
             <SettingsButton onClick={onOpenGroundPlane} title='Ground plane settings' />
           </AnimatableRow>
@@ -303,13 +306,24 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
         </PanelContainer>
       </Section>
 
-      <Section title='Export'>
-        <PanelContainer>
-          <PanelContainerSettingsRow label='Export settings'>
-            <SettingsButton onClick={onOpenExport} title='Export settings' />
-          </PanelContainerSettingsRow>
-        </PanelContainer>
-      </Section>
+      <div className={styles.bottomActions}>
+        <GhostButton
+          label='Export settings'
+          icon={Settings}
+          color='white'
+          onClick={onOpenExport}
+          layoutClassName={styles.bottomActionLayout}
+        />
+        {onDiscardModel && (
+          <GhostButton
+            label='Discard model'
+            icon={Trash2}
+            color='orange'
+            onClick={onDiscardModel}
+            layoutClassName={styles.bottomActionLayout}
+          />
+        )}
+      </div>
     </div>
   )
 }
@@ -332,32 +346,22 @@ function TrackDot({ path, dotClassName }) {
 
 function SettingsButton({ onClick, title }) {
   return (
-    <button
-      type='button'
-      className={cx(styles.componentSettingsButton, styles.component_rootSettingsButton)}
+    <ActionIconButton
+      icon={Settings}
+      size={20}
+      style='outline'
       {...{ onClick, title }}
-    >
-      <Settings size={13} />
-    </button>
+    />
   )
 }
 
 function Section({ title, children, dirty = false, onReset }) {
   return (
     <div className={styles.componentSection}>
-      <div className={styles.sectionHeader}>
-        <LabelUppercaseSm layoutClassName={styles.sectionTitleLayout}>{title}</LabelUppercaseSm>
-        {dirty && onReset && (
-          <button
-            type='button'
-            className={styles.resetButton}
-            onClick={onReset}
-            title={`Reset ${title} to defaults`}
-          >
-            <RotateCcw size={11} />
-          </button>
-        )}
-      </div>
+      <PanelContainerSettingsSectionHeader
+        {...{ title, onReset }}
+        isDirty={dirty}
+      />
       <div className={styles.sectionBody}>{children}</div>
     </div>
   )

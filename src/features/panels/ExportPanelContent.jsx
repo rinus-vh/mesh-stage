@@ -7,7 +7,7 @@ import {
 import { useTimeline } from '../contexts/TimelineContext.jsx'
 import { useCamera } from '../contexts/CameraContext.jsx'
 import { useModelSettings } from '../contexts/ModelSettingsContext.jsx'
-import { RESOLUTIONS, estimateSize, exportImageSequence, exportVideo } from '../machinery/capture.js'
+import { RESOLUTIONS, exportImageSequence, exportVideo } from '../machinery/capture.js'
 
 const FORMATS = [
   { value: 'video',    label: 'Video (.mp4 / .webm)' },
@@ -33,17 +33,7 @@ export function ExportPanelContent() {
   const { glRef } = useCamera()
   const { modelSettings } = useModelSettings()
 
-  const isVideo = format === 'video'
-
-  const videoResolutionOptions = RESOLUTIONS.map(r => ({
-    value: r.value,
-    label: `${r.label} — ${estimateSize('video', r.value, aspectRatio, duration, fps)}`,
-  }))
-
-  const sequenceResolutionOptions = RESOLUTIONS.map(r => ({
-    value: r.value,
-    label: `${r.label} — ${estimateSize('sequence', r.value, aspectRatio, duration, fps)}`,
-  }))
+  const resolutionOptions = RESOLUTIONS.map(r => ({ value: r.value, label: r.label }))
 
   const handleExport = async () => {
     const srcCanvas = glRef.current?.domElement
@@ -95,7 +85,7 @@ export function ExportPanelContent() {
         <Dropdown
           value={resolution}
           onChange={setResolution}
-          options={isVideo ? videoResolutionOptions : sequenceResolutionOptions}
+          options={resolutionOptions}
           placeholder='Resolution'
         />
       </PanelContainerSettingsRow>

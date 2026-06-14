@@ -80,6 +80,10 @@ function AppPanels({ isDark }) {
     setModelUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file) })
   }, [])
 
+  const handleDiscardModel = useCallback(() => {
+    setModelUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null })
+  }, [])
+
   const settings   = usePanelManager('settings',  'Settings')
   const viewport   = usePanelManager('viewport',  'Viewport')
   const wireframe  = usePanelManager('wireframe', 'Wireframe',  { defaultVisible: false })
@@ -107,10 +111,10 @@ function AppPanels({ isDark }) {
 
       {settings.visible && (
         <Panel
-          minimizable
+          isMinimizable
           title='Settings'
           minWidth={4}
-          minHeight={10}
+          minHeight={9}
           onMinimize={settings.minimize}
         >
           <SettingsContent
@@ -121,6 +125,7 @@ function AppPanels({ isDark }) {
             onOpenBumpMap={bumpMap.open}
             onOpenExport={exportP.open}
             onOpenGroundPlane={groundPlane.open}
+            onDiscardModel={modelUrl ? handleDiscardModel : undefined}
             {...{ isDark }}
           />
         </Panel>
@@ -128,10 +133,10 @@ function AppPanels({ isDark }) {
 
       {viewport.visible && (
         <Panel
-          minimizable
+          isMinimizable
           title='Viewport'
           minWidth={8}
-          minHeight={10}
+          minHeight={6}
           onMinimize={viewport.minimize}
         >
           <ViewportContent onFile={handleModelFile} {...{ modelRef, modelUrl }} />
@@ -140,10 +145,10 @@ function AppPanels({ isDark }) {
 
       {timeline.visible && (
         <Panel
-          minimizable
+          isMinimizable
           title='Timeline'
           minWidth={8}
-          minHeight={4}
+          minHeight={3}
           onMinimize={timeline.minimize}
         >
           <TimelinePanelContent />
@@ -152,8 +157,8 @@ function AppPanels({ isDark }) {
 
       {wireframe.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Wireframe'
           minWidth={3}
           minHeight={3}
@@ -166,8 +171,8 @@ function AppPanels({ isDark }) {
 
       {lighting.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Lighting'
           minWidth={3}
           minHeight={4}
@@ -180,8 +185,8 @@ function AppPanels({ isDark }) {
 
       {material.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Material'
           minWidth={3}
           minHeight={4}
@@ -194,8 +199,8 @@ function AppPanels({ isDark }) {
 
       {texture.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Texture'
           minWidth={3}
           minHeight={7}
@@ -208,8 +213,8 @@ function AppPanels({ isDark }) {
 
       {bumpMap.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Bump Map'
           minWidth={3}
           minHeight={4}
@@ -222,8 +227,8 @@ function AppPanels({ isDark }) {
 
       {exportP.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Export'
           minWidth={4}
           minHeight={4}
@@ -236,8 +241,8 @@ function AppPanels({ isDark }) {
 
       {groundPlane.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Ground Plane'
           minWidth={3}
           minHeight={4}
