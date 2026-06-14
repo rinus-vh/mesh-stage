@@ -9,17 +9,35 @@ export function LightingPanelContent() {
 
   return (
     <PanelContainer>
-      <AnimatableRow label='Enabled' path='model.lighting' value={modelSettings.lighting} defaultValue={MODEL_DEFAULTS.lighting} onReset={() => update({ lighting: MODEL_DEFAULTS.lighting })}>
+      <AnimatableRow
+        label='Enabled'
+        path='model.lighting'
+        value={modelSettings.lighting}
+        defaultValue={MODEL_DEFAULTS.lighting}
+        onReset={() => update({ lighting: MODEL_DEFAULTS.lighting })}
+      >
         <Checkbox checked={modelSettings.lighting} onChange={value => update({ lighting: value })} />
       </AnimatableRow>
 
       <PanelContainerDivider />
 
-      <AnimatableRow label='Shadows' path='model.shadows' value={modelSettings.shadows} defaultValue={MODEL_DEFAULTS.shadows} onReset={() => update({ shadows: MODEL_DEFAULTS.shadows })}>
+      <AnimatableRow
+        label='Shadows'
+        path='model.shadows'
+        value={modelSettings.shadows}
+        defaultValue={MODEL_DEFAULTS.shadows}
+        onReset={() => update({ shadows: MODEL_DEFAULTS.shadows })}
+      >
         <Checkbox checked={modelSettings.shadows} onChange={value => update({ shadows: value })} />
       </AnimatableRow>
 
-      <AnimatableRow label='Color' path='model.lightColor' value={modelSettings.lightColor} defaultValue={MODEL_DEFAULTS.lightColor} onReset={() => update({ lightColor: MODEL_DEFAULTS.lightColor })}>
+      <AnimatableRow
+        label='Color'
+        path='model.lightColor'
+        value={modelSettings.lightColor}
+        defaultValue={MODEL_DEFAULTS.lightColor}
+        onReset={() => update({ lightColor: MODEL_DEFAULTS.lightColor })}
+      >
         <ColorInput value={modelSettings.lightColor} onChange={value => update({ lightColor: value })} />
       </AnimatableRow>
 

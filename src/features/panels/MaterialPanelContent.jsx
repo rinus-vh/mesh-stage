@@ -27,7 +27,13 @@ export function MaterialPanelContent() {
 
       <PanelContainerDivider />
 
-      <AnimatableRow label='Color' path='model.color' value={modelSettings.color} defaultValue={MODEL_DEFAULTS.color} onReset={() => update({ color: MODEL_DEFAULTS.color })}>
+      <AnimatableRow
+        label='Color'
+        path='model.color'
+        value={modelSettings.color}
+        defaultValue={MODEL_DEFAULTS.color}
+        onReset={() => update({ color: MODEL_DEFAULTS.color })}
+      >
         <ColorInput value={modelSettings.color} onChange={value => update({ color: value })} disabled={isChrome || wireframe} />
       </AnimatableRow>
 

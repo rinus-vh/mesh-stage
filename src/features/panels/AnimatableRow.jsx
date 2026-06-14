@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { RotateCcw, Plus, Minus, EyeOff, Eye, Trash2 } from 'lucide-react'
+import { RotateCcw, Plus, EyeOff, Eye, Trash2 } from 'lucide-react'
 import { PanelContainerSettingsRow } from '@6njp/prototype-library'
 import { ContextMenu } from '@6njp/prototype-library'
 
 import { useTimeline } from '../contexts/TimelineContext.jsx'
+
 import styles from './AnimatableRow.module.css'
 
 /**
@@ -66,13 +67,13 @@ export function AnimatableRow({ label, path, value, defaultValue, onReset, child
 
   return (
     <>
-      <PanelContainerSettingsRow label={label} onContextMenu={handleContextMenu}>
+      <PanelContainerSettingsRow onContextMenu={handleContextMenu} {...{ label }}>
         {track && (
           <button
             type='button'
-            className={cx(styles.dot, track.muted && styles.dotMuted)}
             onClick={() => setTrackMuted(track.id, !track.muted)}
             title={track.muted ? 'Track disabled — click to reactivate' : 'Has keyframes — click to disable track'}
+            className={cx(styles.dot, track.muted && styles.dotMuted)}
           />
         )}
         {children}

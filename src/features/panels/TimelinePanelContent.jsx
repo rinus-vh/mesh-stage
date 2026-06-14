@@ -25,15 +25,6 @@ export function TimelinePanelContent() {
 
   return (
     <SettingsKeyframeTimeline
-      tracks={tracks}
-      playhead={playhead}
-      playheadRef={playheadRef}
-      playing={playing}
-      loop={loop}
-      fps={fps}
-      duration={duration}
-      recording={recording}
-      selectedKeyframes={selectedKeyframes}
       onToggle={toggle}
       onPause={pause}
       onSetLoop={setLoop}
@@ -46,6 +37,17 @@ export function TimelinePanelContent() {
       onSelectKeyframesInBox={selectKeyframesInBox}
       onClearSelection={clearSelection}
       onSetFps={setFps}
+      {...{
+        tracks,
+        playhead,
+        playheadRef,
+        playing,
+        loop,
+        fps,
+        duration,
+        recording,
+        selectedKeyframes
+      }}
     />
   )
 }
