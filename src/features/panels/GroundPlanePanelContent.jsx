@@ -1,7 +1,7 @@
 import { PanelContainer, PanelContainerDivider, Checkbox, ColorInput } from '@6njp/prototype-library'
 
-import { useAnimatableModelSettings } from '../contexts/useAnimatable.js'
-import { MODEL_DEFAULTS } from '../contexts/ModelSettingsContext.jsx'
+import { useAnimatableModelSettings } from '@/contexts/useAnimatable.js'
+import { MODEL_DEFAULTS } from '@/constants/modelSettings.js'
 import { AnimatableRow } from './AnimatableRow.jsx'
 
 export function GroundPlanePanelContent() {

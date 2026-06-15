@@ -16,7 +16,7 @@
     "source:remote": "6njp-source remote && pnpm install"
   },
   "dependencies": {
-    "@6njp/prototype-library": "github:rinus-vh/prototype-library",
+    "@6njp/prototype-library": "link:../prototype-library",
     "@floating-ui/react": "^0.27.19",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
@@ -27,9 +27,10 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
-    "@6njp/eslint-plugin": "github:rinus-vh/plugins#path:eslint-plugin",
-    "@6njp/stylelint-plugin": "github:rinus-vh/plugins#path:stylelint-plugin",
+    "@6njp/eslint-plugin": "link:../plugins/eslint-plugin",
+    "@6njp/stylelint-plugin": "link:../plugins/stylelint-plugin",
     "@eslint/js": "^9.39.4",
+    "@react-three/eslint-plugin": "^0.1.2",
     "@stylistic/eslint-plugin": "^2.13.0",
     "@vitejs/plugin-react": "^6.0.2",
     "esbuild": "^0.27",

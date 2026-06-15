@@ -1,16 +1,18 @@
 import { Settings, Trash2 } from 'lucide-react'
 import {
-  PanelContainer, PanelContainerSettingsRow, PanelContainerDivider,
+  PanelContainer, PanelContainerSettingsRow,
   PanelContainerSettingsSectionHeader,
   ActionIconButton,
   GhostButton, Knob, Slider, Checkbox, ColorInput,
 } from '@6njp/prototype-library'
 
-import { useRotation, ROTATION_DEFAULTS } from './contexts/RotationContext.jsx'
-import { useCamera, CAMERA_DEFAULTS } from './contexts/CameraContext.jsx'
-import { useModelSettings, MODEL_DEFAULTS } from './contexts/ModelSettingsContext.jsx'
-import { useTimeline } from './contexts/TimelineContext.jsx'
-import { useAnimatableModelSettings } from './contexts/useAnimatable.js'
+import { CAMERA_DEFAULTS } from '@/constants/cameraDefaults.js'
+import { MODEL_DEFAULTS } from '@/constants/modelSettings.js'
+import { useCameraContext } from '@/contexts/CameraContext.jsx'
+import { useModelSettingsContext } from '@/contexts/ModelSettingsContext.jsx'
+import { useRotationContext } from '@/contexts/RotationContext.jsx'
+import { useTimelineContext } from '@/contexts/TimelineContext.jsx'
+import { useAnimatableModelSettings } from '@/contexts/useAnimatable.js'
 import { AnimatableRow } from './panels/AnimatableRow.jsx'
 
 import animatableStyles from './panels/AnimatableRow.module.css'
@@ -32,7 +34,7 @@ const SCENE_SECTION_KEYS = ['showGroundPlane', 'groundPlane', 'gravity']
 
 function deepEqual(a, b) {
   if (a === b) return true
-  if (a == null || b == null) return a === b
+  if (a === null || a === undefined || b === null || b === undefined) return a === b
   if (typeof a !== 'object') return a === b
   const ka = Object.keys(a), kb = Object.keys(b)
   if (ka.length !== kb.length) return false
@@ -42,10 +44,10 @@ function deepEqual(a, b) {
 export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpenMaterial, onOpenTexture, onOpenBumpMap, onOpenExport, onOpenGroundPlane, onDiscardModel }) {
   // Effective (animated) settings for display; base for dirty checks / resets.
   const { modelSettings, update } = useAnimatableModelSettings()
-  const { modelSettings: base, update: baseUpdate, backgroundIsDefault, resetBackground, groundPlaneColorIsDefault, resetGroundPlane } = useModelSettings()
-  const { rotation, setAxisDeg, resetRotation } = useRotation()
-  const { zoom, orbitX, orbitY, height, handleZoomChange, handleOrbitChange, handleHeightChange, resetCamera, controlsRef } = useCamera()
-  const { tracks, record, liveSample, removeTrack } = useTimeline()
+  const { modelSettings: base, update: baseUpdate, backgroundIsDefault, resetBackground, groundPlaneColorIsDefault, resetGroundPlane } = useModelSettingsContext()
+  const { rotation, setAxisDeg, resetRotation } = useRotationContext()
+  const { zoom, orbitX, orbitY, height, handleZoomChange, handleOrbitChange, handleHeightChange, resetCamera, controlsRef } = useCameraContext()
+  const { tracks, record, liveSample, removeTrack } = useTimelineContext()
 
   const themeDefaultBg = isDark ? '#111111' : '#ffffff'
 
@@ -355,7 +357,7 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
 // A standalone track indicator dot (same visual as AnimatableRow's dot) for use
 // outside of PanelContainerSettingsRow — e.g. above a Knob in a grid layout.
 function TrackDot({ path, dotClassName }) {
-  const { tracks, setTrackMuted } = useTimeline()
+  const { tracks, setTrackMuted } = useTimelineContext()
   const track = path ? tracks.find(t => t.path === path) : null
   if (!track) return null
 

@@ -3,7 +3,7 @@ import { RotateCcw, Plus, EyeOff, Eye, Trash2 } from 'lucide-react'
 import { PanelContainerSettingsRow } from '@6njp/prototype-library'
 import { ContextMenu } from '@6njp/prototype-library'
 
-import { useTimeline } from '../contexts/TimelineContext.jsx'
+import { useTimelineContext } from '@/contexts/TimelineContext.jsx'
 
 import styles from './AnimatableRow.module.css'
 
@@ -23,7 +23,7 @@ import styles from './AnimatableRow.module.css'
  * When `path` is omitted it behaves exactly like PanelContainerSettingsRow.
  */
 export function AnimatableRow({ label, path, value, defaultValue, onReset, children }) {
-  const { tracks, playhead, setTrackMuted, addOrUpdateKeyframe, removeTrack } = useTimeline()
+  const { tracks, playhead, setTrackMuted, addOrUpdateKeyframe, removeTrack } = useTimelineContext()
   const track = path ? tracks.find(t => t.path === path) : null
 
   const [menu, setMenu] = useState(null) // { x, y }

@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from 'react'
 
-import { useModelSettings } from './ModelSettingsContext.jsx'
-import { useTimeline } from './TimelineContext.jsx'
-import { setByPath, getByPath } from '../machinery/interpolate.js'
+import { setByPath } from '@/machinery/interpolate.js'
+import { useModelSettingsContext } from './ModelSettingsContext.jsx'
+import { useTimelineContext } from './TimelineContext.jsx'
 
 // Nice track labels for model.* paths (fallback is the raw leaf path).
 const MODEL_LABELS = {
@@ -34,15 +34,15 @@ function flatten(patch, prefix = '') {
 }
 
 /**
- * Like useModelSettings, but:
+ * Like useModelSettingsContext, but:
  * - Returns effective (timeline-merged) settings so the panel UI reflects the current
  *   animated state as the playhead moves.
  * - Every change also records a keyframe at the current playhead (no-op while playing,
  *   or when the recording toggle is off).
  */
 export function useAnimatableModelSettings() {
-  const { modelSettings, update: baseUpdate } = useModelSettings()
-  const { record } = useTimeline()
+  const { update: baseUpdate } = useModelSettingsContext()
+  const { record } = useTimelineContext()
   const effective = useEffectiveModelSettings()
 
   const update = useCallback((patch) => {
@@ -53,7 +53,6 @@ export function useAnimatableModelSettings() {
     }
   }, [baseUpdate, record])
 
-  // Expose effective (animated) values for display, but update targets the base.
   return { modelSettings: effective, update }
 }
 
@@ -62,8 +61,8 @@ export function useAnimatableModelSettings() {
  * This is what the 3D scene renders and what the settings panels should display.
  */
 export function useEffectiveModelSettings() {
-  const { modelSettings } = useModelSettings()
-  const { liveSample } = useTimeline()
+  const { modelSettings } = useModelSettingsContext()
+  const { liveSample } = useTimelineContext()
 
   return useMemo(() => {
     let eff = modelSettings

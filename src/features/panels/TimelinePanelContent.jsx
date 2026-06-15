@@ -1,20 +1,21 @@
 import { SettingsKeyframeTimeline } from '@6njp/prototype-library'
 
-import { useTimeline } from '../contexts/TimelineContext.jsx'
-import { useModelSettings, MODEL_DEFAULTS } from '../contexts/ModelSettingsContext.jsx'
-import { useCamera } from '../contexts/CameraContext.jsx'
-import { useRotation } from '../contexts/RotationContext.jsx'
+import { useTimelineContext } from '@/contexts/TimelineContext.jsx'
+import { useModelSettingsContext } from '@/contexts/ModelSettingsContext.jsx'
+import { MODEL_DEFAULTS } from '@/constants/modelSettings.js'
+import { useCameraContext } from '@/contexts/CameraContext.jsx'
+import { useRotationContext } from '@/contexts/RotationContext.jsx'
 
 export function TimelinePanelContent() {
   const {
     tracks, playhead, playheadRef, playing, loop, fps, duration, recording, selectedKeyframes,
     toggle, pause, setLoop, setRecording, setPlayhead, setTrackMuted, clearAllTracks,
     selectKeyframe, moveSelectedKeyframes, selectKeyframesInBox, clearSelection, setFps,
-  } = useTimeline()
+  } = useTimelineContext()
 
-  const { update: resetModelSettings } = useModelSettings()
-  const { resetCamera } = useCamera()
-  const { resetRotation } = useRotation()
+  const { update: resetModelSettings } = useModelSettingsContext()
+  const { resetCamera } = useCameraContext()
+  const { resetRotation } = useRotationContext()
 
   const handleClearAll = () => {
     clearAllTracks()

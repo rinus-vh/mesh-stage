@@ -1,10 +1,9 @@
-import { createContext, useContext, useState, useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
-export const CAMERA_DEFAULTS = { zoom: 5, orbitX: 0, orbitY: 15, height: 0 }
+import { CAMERA_DEFAULTS } from '@/constants/cameraDefaults.js'
+import { CameraContext } from './CameraContext.jsx'
 
-const CameraContext = createContext(null)
-
-export function CameraProvider({ children }) {
+export function CameraContextProvider({ children }) {
   const [zoom,   setZoom]   = useState(CAMERA_DEFAULTS.zoom)
   const [orbitX, setOrbitX] = useState(CAMERA_DEFAULTS.orbitX)
   const [orbitY, setOrbitY] = useState(CAMERA_DEFAULTS.orbitY)
@@ -26,18 +25,16 @@ export function CameraProvider({ children }) {
   }, [])
 
   return (
-    <CameraContext.Provider value={{
-      zoom, orbitX, orbitY, height,
-      setZoom, setOrbitX, setOrbitY, setHeight,
-      cameraRef, controlsRef, glRef,
-      handleZoomChange, handleOrbitChange, handleHeightChange,
-      resetCamera,
-    }}>
+    <CameraContext.Provider
+      value={{
+        zoom, orbitX, orbitY, height,
+        setZoom, setOrbitX, setOrbitY, setHeight,
+        cameraRef, controlsRef, glRef,
+        handleZoomChange, handleOrbitChange, handleHeightChange,
+        resetCamera,
+      }}
+    >
       {children}
     </CameraContext.Provider>
   )
-}
-
-export function useCamera() {
-  return useContext(CameraContext)
 }

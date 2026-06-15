@@ -4,10 +4,10 @@ import {
   Dropdown, Button, LabelSm,
 } from '@6njp/prototype-library'
 
-import { useTimeline } from '../contexts/TimelineContext.jsx'
-import { useCamera } from '../contexts/CameraContext.jsx'
-import { useModelSettings } from '../contexts/ModelSettingsContext.jsx'
-import { RESOLUTIONS, exportImageSequence, exportVideo } from '../machinery/capture.js'
+import { useTimelineContext } from '@/contexts/TimelineContext.jsx'
+import { useCameraContext } from '@/contexts/CameraContext.jsx'
+import { useModelSettingsContext } from '@/contexts/ModelSettingsContext.jsx'
+import { RESOLUTIONS, exportImageSequence, exportVideo } from '@/machinery/capture.js'
 
 const FORMATS = [
   { value: 'video',    label: 'Video (.mp4 / .webm)' },
@@ -29,9 +29,9 @@ export function ExportPanelContent() {
   const [progress, setProgress]       = useState(null)
   const [busy, setBusy]               = useState(false)
 
-  const { duration, fps, setFps, setPlayhead, play, pause } = useTimeline()
-  const { glRef } = useCamera()
-  const { modelSettings } = useModelSettings()
+  const { duration, fps, setFps, setPlayhead, play, pause } = useTimelineContext()
+  const { glRef } = useCameraContext()
+  const { modelSettings } = useModelSettingsContext()
 
   const resolutionOptions = RESOLUTIONS.map(r => ({ value: r.value, label: r.label }))
 

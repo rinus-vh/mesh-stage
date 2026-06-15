@@ -3,15 +3,11 @@ import { createPortal } from 'react-dom'
 import { Box } from 'lucide-react'
 import {
   Grid, Header, Panel,
-  MinimizedPanelsProvider, MinimizedPanelsMenu, usePanelManager,
+  MinimizedPanelsMenuContextProvider, MinimizedPanelsMenu, usePanelManager,
 } from '@6njp/prototype-library'
-import { getThemeVariables, ThemeProvider } from '@6njp/prototype-library/machinery'
+import { getThemeVariables, ThemeContextProvider } from '@6njp/prototype-library/machinery'
 
-import { ModelSettingsProvider, useModelSettings } from '@/features/contexts/ModelSettingsContext.jsx'
 import { ViewCanvas } from '@/features/ViewCanvas.jsx'
-import { RotationProvider } from '@/features/contexts/RotationContext.jsx'
-import { CameraProvider } from '@/features/contexts/CameraContext.jsx'
-import { TimelineProvider } from '@/features/contexts/TimelineContext.jsx'
 import { SettingsContent } from '@/features/SettingsContent.jsx'
 import { ViewportContent } from '@/features/ViewportContent.jsx'
 import { TimelinePanelContent } from '@/features/panels/TimelinePanelContent.jsx'
@@ -23,6 +19,12 @@ import { BumpMapPanelContent } from '@/features/panels/BumpMapPanelContent.jsx'
 import { ExportPanelContent } from '@/features/panels/ExportPanelContent.jsx'
 import { GroundPlanePanelContent } from '@/features/panels/GroundPlanePanelContent.jsx'
 
+import { CameraContextProvider } from '@/contexts/CameraContextProvider.jsx'
+import { ModelSettingsContextProvider } from '@/contexts/ModelSettingsContextProvider.jsx'
+import { useModelSettingsContext } from '@/contexts/ModelSettingsContext.jsx'
+import { RotationContextProvider } from '@/contexts/RotationContextProvider.jsx'
+import { TimelineContextProvider } from '@/contexts/TimelineContextProvider.jsx'
+
 import styles from './App.module.css'
 
 export default function App() {
@@ -30,14 +32,14 @@ export default function App() {
   const theme = isDark ? 'dark' : 'light'
 
   return (
-    <ThemeProvider {...{ theme }}>
-      <ModelSettingsProvider>
+    <ThemeContextProvider {...{ theme }}>
+      <ModelSettingsContextProvider>
         <ThemeBackgroundSync {...{ isDark }} />
 
-        <RotationProvider>
-          <CameraProvider>
-            <TimelineProvider>
-              <MinimizedPanelsProvider>
+        <RotationContextProvider>
+          <CameraContextProvider>
+            <TimelineContextProvider>
+              <MinimizedPanelsMenuContextProvider>
                 <main style={getThemeVariables(theme)} className={styles.container}>
                   <Header
                     title='Mesh Stage'
@@ -52,19 +54,19 @@ export default function App() {
 
                   <MinimizedPanelsMenu layoutClassName={styles.minimizedMenuLayout} />
                 </main>
-              </MinimizedPanelsProvider>
-            </TimelineProvider>
-          </CameraProvider>
-        </RotationProvider>
-      </ModelSettingsProvider>
-    </ThemeProvider>
+              </MinimizedPanelsMenuContextProvider>
+            </TimelineContextProvider>
+          </CameraContextProvider>
+        </RotationContextProvider>
+      </ModelSettingsContextProvider>
+    </ThemeContextProvider>
   )
 }
 
 // Syncs the background colour with the active theme whenever the user hasn't
 // overridden it manually.
 function ThemeBackgroundSync({ isDark }) {
-  const { resetToThemeBackground, resetToThemeGroundPlane } = useModelSettings()
+  const { resetToThemeBackground, resetToThemeGroundPlane } = useModelSettingsContext()
   React.useEffect(() => {
     resetToThemeBackground(isDark ? '#111111' : '#ffffff')
     resetToThemeGroundPlane(isDark ? '#ffffff' : '#000000')
