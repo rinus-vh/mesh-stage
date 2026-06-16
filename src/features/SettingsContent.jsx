@@ -344,7 +344,7 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
           <GhostButton
             label='Discard model'
             icon={Trash2}
-            color='orange'
+            color='dynamic'
             onClick={onDiscardModel}
             layoutClassName={styles.bottomActionLayout}
           />
