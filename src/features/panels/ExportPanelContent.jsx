@@ -4,9 +4,10 @@ import {
   Dropdown, Button, LabelSm,
 } from '@6njp/prototype-library'
 
-import { useTimeline } from '../contexts/TimelineContext.jsx'
-import { useCamera } from '../contexts/CameraContext.jsx'
-import { RESOLUTIONS, QUALITIES, estimateSize, exportImageSequence, exportVideo } from '../machinery/capture.js'
+import { useTimelineContext } from '@/contexts/TimelineContext.jsx'
+import { useCameraContext } from '@/contexts/CameraContext.jsx'
+import { useModelSettingsContext } from '@/contexts/ModelSettingsContext.jsx'
+import { RESOLUTIONS, exportImageSequence, exportVideo } from '@/machinery/capture.js'
 
 const FORMATS = [
   { value: 'video',    label: 'Video (.mp4 / .webm)' },
@@ -20,32 +21,19 @@ const ASPECT_RATIOS = [
   { value: '9:16', label: '9:16 Portrait' },
 ]
 
-const RESOLUTION_OPTIONS = RESOLUTIONS.map(r => ({ value: r.value, label: r.label }))
 
 export function ExportPanelContent() {
   const [format, setFormat]           = useState('video')
   const [aspectRatio, setAspectRatio] = useState('16:9')
   const [resolution, setResolution]   = useState('1080')
-  const [quality, setQuality]         = useState('high')
   const [progress, setProgress]       = useState(null)
   const [busy, setBusy]               = useState(false)
 
-  const { duration, fps, setPlayhead, play, pause } = useTimeline()
-  const { glRef } = useCamera()
+  const { duration, fps, setFps, setPlayhead, play, pause } = useTimelineContext()
+  const { glRef } = useCameraContext()
+  const { modelSettings } = useModelSettingsContext()
 
-  const isVideo = format === 'video'
-
-  // Quality options include a size estimate for video; sequence estimates are
-  // resolution-dependent so we show those inline in the resolution row instead.
-  const qualityOptions = QUALITIES.map(q => ({
-    value: q.value,
-    label: `${q.label} — ${estimateSize('video', resolution, q.value, aspectRatio, duration, fps)}`,
-  }))
-
-  const sequenceResolutionOptions = RESOLUTIONS.map(r => ({
-    value: r.value,
-    label: `${r.label} — ${estimateSize('sequence', r.value, quality, aspectRatio, duration, fps)}`,
-  }))
+  const resolutionOptions = RESOLUTIONS.map(r => ({ value: r.value, label: r.label }))
 
   const handleExport = async () => {
     const srcCanvas = glRef.current?.domElement
@@ -56,7 +44,8 @@ export function ExportPanelContent() {
     }
     setBusy(true)
     const opts = {
-      srcCanvas, duration, fps, aspect: aspectRatio, resolution, quality,
+      srcCanvas, duration, fps, aspect: aspectRatio, resolution,
+      transparent: modelSettings.transparentBackground,
       setPlayhead, play, pause,
       onProgress: p => setProgress(`Rendering… ${Math.round(p * 100)}%`),
     }
@@ -96,21 +85,22 @@ export function ExportPanelContent() {
         <Dropdown
           value={resolution}
           onChange={setResolution}
-          options={isVideo ? RESOLUTION_OPTIONS : sequenceResolutionOptions}
+          options={resolutionOptions}
           placeholder='Resolution'
         />
       </PanelContainerSettingsRow>
 
-      {isVideo && (
-        <PanelContainerSettingsRow label='Quality'>
-          <Dropdown
-            value={quality}
-            onChange={setQuality}
-            options={qualityOptions}
-            placeholder='Quality'
-          />
-        </PanelContainerSettingsRow>
-      )}
+      <PanelContainerSettingsRow label='Frame rate'>
+        <Dropdown
+          value={String(fps)}
+          onChange={v => setFps(Number(v))}
+          options={[
+            { value: '24', label: '24 fps' },
+            { value: '30', label: '30 fps' },
+          ]}
+          placeholder='Frame rate'
+        />
+      </PanelContainerSettingsRow>
 
       <PanelContainerDivider />
 

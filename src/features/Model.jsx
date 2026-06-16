@@ -25,7 +25,7 @@ function GroundPlane({ settings, shadows }) {
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, -1.5, 0]}
       receiveShadow={receiveShadows && shadows}
-      material={material}
+      {...{ material }}
     >
       <planeGeometry args={[10, 10, 10, 10]} />
     </mesh>
@@ -103,10 +103,12 @@ export const Model = forwardRef(function Model({ url, baseRotation, modelSetting
         child.add(wf)
         child.material.visible = false
       } else {
+        const isChrome = modelSettings.materialPreset === 'chrome'
         const mat = new THREE.MeshStandardMaterial({
-          color: modelSettings.color,
-          metalness: modelSettings.metalness,
-          roughness: modelSettings.roughness,
+          color: isChrome ? '#ffffff' : modelSettings.color,
+          metalness: isChrome ? 1 : modelSettings.metalness,
+          roughness: isChrome ? 0 : modelSettings.roughness,
+          envMapIntensity: isChrome ? 2 : 1,
         })
 
         if (tex.enabled && tex.url) {
@@ -135,7 +137,7 @@ export const Model = forwardRef(function Model({ url, baseRotation, modelSetting
       child.receiveShadow = shadows && !wireframe
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model, originalGeometries, wireframe, resolution, shadows, tex.enabled, tex.url, bump.enabled, bump.url])
+  }, [model, originalGeometries, wireframe, resolution, shadows, tex.enabled, tex.url, bump.enabled, bump.url, modelSettings.materialPreset])
 
   // ── Cheap in-place updates for animatable scalars/colours. No object churn. ──
   useEffect(() => {
@@ -149,9 +151,11 @@ export const Model = forwardRef(function Model({ url, baseRotation, modelSetting
       }
       const mat = child.material
       if (!mat || !mat.isMeshStandardMaterial) return
-      mat.color.set(modelSettings.color)
-      mat.roughness = modelSettings.roughness
-      mat.metalness = modelSettings.metalness
+      const isChrome = modelSettings.materialPreset === 'chrome'
+      mat.color.set(isChrome ? '#ffffff' : modelSettings.color)
+      mat.roughness = isChrome ? 0 : modelSettings.roughness
+      mat.metalness = isChrome ? 1 : modelSettings.metalness
+      mat.envMapIntensity = isChrome ? 2 : 1
       if (mat.map) {
         mat.map.repeat.set(tex.repeat.x * tex.scale, tex.repeat.y * tex.scale)
         mat.map.offset.set(tex.offset.x, tex.offset.y)
@@ -160,7 +164,7 @@ export const Model = forwardRef(function Model({ url, baseRotation, modelSetting
     })
   }, [
     model, wireframe, wireframeColor, modelSettings.color, modelSettings.roughness, modelSettings.metalness,
-    tex.repeat.x, tex.repeat.y, tex.scale, tex.offset.x, tex.offset.y, bump.strength,
+    modelSettings.materialPreset, tex.repeat.x, tex.repeat.y, tex.scale, tex.offset.x, tex.offset.y, bump.strength,
   ])
 
   useFrame((_, delta) => {

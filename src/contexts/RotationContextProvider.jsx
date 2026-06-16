@@ -1,10 +1,9 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
-export const ROTATION_DEFAULTS = { x: 0, y: 0, z: 0 }
+import { ROTATION_DEFAULTS } from '@/constants/rotationDefaults.js'
+import { RotationContext } from './RotationContext.jsx'
 
-const RotationContext = createContext(null)
-
-export function RotationProvider({ children }) {
+export function RotationContextProvider({ children }) {
   const [rotation, setRotation] = useState(ROTATION_DEFAULTS)
 
   const setAxisDeg = useCallback((axis, deg) => {
@@ -20,8 +19,4 @@ export function RotationProvider({ children }) {
       {children}
     </RotationContext.Provider>
   )
-}
-
-export function useRotation() {
-  return useContext(RotationContext)
 }

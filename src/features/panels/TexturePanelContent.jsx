@@ -1,6 +1,6 @@
 import { PanelContainer, PanelContainerDivider, Slider, Checkbox, FileUpload } from '@6njp/prototype-library'
 
-import { useAnimatableModelSettings } from '../contexts/useAnimatable.js'
+import { useAnimatableModelSettings } from '@/contexts/useAnimatable.js'
 import { ImagePreview } from './ImagePreview.jsx'
 import { AnimatableRow } from './AnimatableRow.jsx'
 

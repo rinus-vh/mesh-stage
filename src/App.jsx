@@ -3,15 +3,11 @@ import { createPortal } from 'react-dom'
 import { Box } from 'lucide-react'
 import {
   Grid, Header, Panel,
-  MinimizedPanelsProvider, MinimizedPanelsMenu, usePanelManager,
+  MinimizedPanelsMenuContextProvider, MinimizedPanelsMenu, usePanelManager,
 } from '@6njp/prototype-library'
-import { getThemeVariables } from '@6njp/prototype-library/machinery'
+import { getThemeVariables, ThemeContextProvider } from '@6njp/prototype-library/machinery'
 
-import { ModelSettingsProvider, useModelSettings } from '@/features/contexts/ModelSettingsContext.jsx'
 import { ViewCanvas } from '@/features/ViewCanvas.jsx'
-import { RotationProvider } from '@/features/contexts/RotationContext.jsx'
-import { CameraProvider } from '@/features/contexts/CameraContext.jsx'
-import { TimelineProvider } from '@/features/contexts/TimelineContext.jsx'
 import { SettingsContent } from '@/features/SettingsContent.jsx'
 import { ViewportContent } from '@/features/ViewportContent.jsx'
 import { TimelinePanelContent } from '@/features/panels/TimelinePanelContent.jsx'
@@ -23,47 +19,58 @@ import { BumpMapPanelContent } from '@/features/panels/BumpMapPanelContent.jsx'
 import { ExportPanelContent } from '@/features/panels/ExportPanelContent.jsx'
 import { GroundPlanePanelContent } from '@/features/panels/GroundPlanePanelContent.jsx'
 
+import { CameraContextProvider } from '@/contexts/CameraContextProvider.jsx'
+import { ModelSettingsContextProvider } from '@/contexts/ModelSettingsContextProvider.jsx'
+import { useModelSettingsContext } from '@/contexts/ModelSettingsContext.jsx'
+import { RotationContextProvider } from '@/contexts/RotationContextProvider.jsx'
+import { TimelineContextProvider } from '@/contexts/TimelineContextProvider.jsx'
+
 import styles from './App.module.css'
 
 export default function App() {
   const [isDark, setIsDark] = React.useState(true)
-  const themeVariables = getThemeVariables(isDark ? 'dark' : 'light')
+  const theme = isDark ? 'dark' : 'light'
 
   return (
-    <ModelSettingsProvider>
-      <ThemeBackgroundSync isDark={isDark} />
-      <RotationProvider>
-        <CameraProvider>
-          <TimelineProvider>
-            <MinimizedPanelsProvider>
-              <main style={themeVariables} className={styles.app}>
-                <Header
-                  title='Mesh Stage'
-                  logo={Box}
-                  onToggleTheme={() => setIsDark(prev => !prev)}
-                  layoutClassName={styles.headerLayout}
-                  {...{ isDark }}
-                />
-                <Grid layoutClassName={styles.gridLayout}>
-                  <AppPanels isDark={isDark} />
-                </Grid>
-                <MinimizedPanelsMenu layoutClassName={styles.minimizedMenuLayout} />
-              </main>
-            </MinimizedPanelsProvider>
-          </TimelineProvider>
-        </CameraProvider>
-      </RotationProvider>
-    </ModelSettingsProvider>
+    <ThemeContextProvider {...{ theme }}>
+      <ModelSettingsContextProvider>
+        <ThemeBackgroundSync {...{ isDark }} />
+
+        <RotationContextProvider>
+          <CameraContextProvider>
+            <TimelineContextProvider>
+              <MinimizedPanelsMenuContextProvider>
+                <main style={getThemeVariables(theme)} className={styles.container}>
+                  <Header
+                    title='Mesh Stage'
+                    logo={Box}
+                    onToggleTheme={() => setIsDark(prev => !prev)}
+                    layoutClassName={styles.headerLayout}
+                    {...{ isDark }}
+                  />
+                  <Grid layoutClassName={styles.gridLayout}>
+                    <AppPanels {...{ isDark }} />
+                  </Grid>
+
+                  <MinimizedPanelsMenu layoutClassName={styles.minimizedMenuLayout} />
+                </main>
+              </MinimizedPanelsMenuContextProvider>
+            </TimelineContextProvider>
+          </CameraContextProvider>
+        </RotationContextProvider>
+      </ModelSettingsContextProvider>
+    </ThemeContextProvider>
   )
 }
 
 // Syncs the background colour with the active theme whenever the user hasn't
 // overridden it manually.
 function ThemeBackgroundSync({ isDark }) {
-  const { resetToThemeBackground } = useModelSettings()
+  const { resetToThemeBackground, resetToThemeGroundPlane } = useModelSettingsContext()
   React.useEffect(() => {
     resetToThemeBackground(isDark ? '#111111' : '#ffffff')
-  }, [isDark, resetToThemeBackground])
+    resetToThemeGroundPlane(isDark ? '#ffffff' : '#000000')
+  }, [isDark, resetToThemeBackground, resetToThemeGroundPlane])
   return null
 }
 
@@ -73,6 +80,10 @@ function AppPanels({ isDark }) {
   const modelRef = useRef(null)
   const handleModelFile = useCallback((file) => {
     setModelUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file) })
+  }, [])
+
+  const handleDiscardModel = useCallback(() => {
+    setModelUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null })
   }, [])
 
   const settings   = usePanelManager('settings',  'Settings')
@@ -95,21 +106,20 @@ function AppPanels({ isDark }) {
        */}
       {!viewport.visible && modelUrl && createPortal(
         <div style={{ position: 'fixed', left: '-400px', top: 0, width: '200px', height: '200px', visibility: 'hidden', pointerEvents: 'none' }}>
-          <ViewCanvas modelRef={modelRef} modelUrl={modelUrl} />
+          <ViewCanvas {...{ modelRef, modelUrl }} />
         </div>,
         document.body,
       )}
 
       {settings.visible && (
         <Panel
-          minimizable
+          isMinimizable
           title='Settings'
           minWidth={4}
-          minHeight={10}
+          minHeight={9}
           onMinimize={settings.minimize}
         >
           <SettingsContent
-            isDark={isDark}
             onOpenWireframe={wireframe.open}
             onOpenLighting={lighting.open}
             onOpenMaterial={material.open}
@@ -117,28 +127,30 @@ function AppPanels({ isDark }) {
             onOpenBumpMap={bumpMap.open}
             onOpenExport={exportP.open}
             onOpenGroundPlane={groundPlane.open}
+            onDiscardModel={modelUrl ? handleDiscardModel : undefined}
+            {...{ isDark }}
           />
         </Panel>
       )}
 
       {viewport.visible && (
         <Panel
-          minimizable
+          isMinimizable
           title='Viewport'
           minWidth={8}
-          minHeight={10}
+          minHeight={6}
           onMinimize={viewport.minimize}
         >
-          <ViewportContent modelUrl={modelUrl} modelRef={modelRef} onFile={handleModelFile} />
+          <ViewportContent onFile={handleModelFile} {...{ modelRef, modelUrl }} />
         </Panel>
       )}
 
       {timeline.visible && (
         <Panel
-          minimizable
+          isMinimizable
           title='Timeline'
           minWidth={8}
-          minHeight={4}
+          minHeight={3}
           onMinimize={timeline.minimize}
         >
           <TimelinePanelContent />
@@ -147,8 +159,8 @@ function AppPanels({ isDark }) {
 
       {wireframe.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Wireframe'
           minWidth={3}
           minHeight={3}
@@ -161,8 +173,8 @@ function AppPanels({ isDark }) {
 
       {lighting.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Lighting'
           minWidth={3}
           minHeight={4}
@@ -175,8 +187,8 @@ function AppPanels({ isDark }) {
 
       {material.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Material'
           minWidth={3}
           minHeight={4}
@@ -189,8 +201,8 @@ function AppPanels({ isDark }) {
 
       {texture.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Texture'
           minWidth={3}
           minHeight={7}
@@ -203,8 +215,8 @@ function AppPanels({ isDark }) {
 
       {bumpMap.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Bump Map'
           minWidth={3}
           minHeight={4}
@@ -217,11 +229,11 @@ function AppPanels({ isDark }) {
 
       {exportP.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Export'
           minWidth={4}
-          minHeight={3}
+          minHeight={4}
           onClose={exportP.close}
           onMinimize={exportP.minimize}
         >
@@ -231,8 +243,8 @@ function AppPanels({ isDark }) {
 
       {groundPlane.visible && (
         <Panel
-          closeable
-          minimizable
+          isCloseable
+          isMinimizable
           title='Ground Plane'
           minWidth={3}
           minHeight={4}

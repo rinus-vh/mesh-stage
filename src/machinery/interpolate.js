@@ -2,7 +2,7 @@
 
 /** Read a nested value by dot path, e.g. getByPath(s, 'texture.scale'). */
 export function getByPath(obj, path) {
-  return path.split('.').reduce((acc, key) => (acc == null ? acc : acc[key]), obj)
+  return path.split('.').reduce((acc, key) => (acc === null || acc === undefined ? acc : acc[key]), obj)
 }
 
 /** Immutably set a nested value by dot path, returning a new object. */

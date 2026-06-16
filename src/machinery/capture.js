@@ -12,20 +12,13 @@ export const RESOLUTIONS = [
   { value: '2160', label: '2160p (4K)',   height: 2160 },
 ]
 
-// ── Quality presets (video only) ──────────────────────────────────────────────
-
-export const QUALITIES = [
-  { value: 'low',    label: 'Low',    videoBitsPerSecond:  6_000_000 },
-  { value: 'medium', label: 'Medium', videoBitsPerSecond: 18_000_000 },
-  { value: 'high',   label: 'High',   videoBitsPerSecond: 40_000_000 },
-]
+const VIDEO_BITS_PER_SECOND = 40_000_000
 
 // PNG: ~3 bytes/pixel raw, ~5× compression → 0.6 bytes/pixel
 const PNG_BYTES_PER_PX = 0.6
 
-export function estimateSize(format, resolutionValue, qualityValue, aspectRatio, duration, fps) {
+export function estimateSize(format, resolutionValue, aspectRatio, duration, fps) {
   const preset   = RESOLUTIONS.find(r => r.value === resolutionValue) ?? RESOLUTIONS[2]
-  const quality  = QUALITIES.find(q => q.value === qualityValue)      ?? QUALITIES[1]
   const [aw, ah] = aspectRatio.split(':').map(Number)
   const h = preset.height
   const w = Math.round((h * aw) / ah)
@@ -35,7 +28,7 @@ export function estimateSize(format, resolutionValue, qualityValue, aspectRatio,
     const frames = Math.max(1, Math.round(duration * fps))
     bytes = w * h * PNG_BYTES_PER_PX * frames
   } else {
-    bytes = duration * quality.videoBitsPerSecond / 8
+    bytes = duration * VIDEO_BITS_PER_SECOND / 8
   }
 
   if (bytes < 1_000_000) return `~${Math.round(bytes / 1_000)} KB`
@@ -96,19 +89,20 @@ const extForMime = (mime) => (mime.startsWith('video/mp4') ? 'mp4' : 'webm')
  * Deterministically step the timeline frame-by-frame, capturing each frame as
  * a PNG, then download them as a single .zip.
  */
-export async function exportImageSequence({ srcCanvas, duration, fps, aspect, resolution, setPlayhead, pause, onProgress }) {
+export async function exportImageSequence({ srcCanvas, duration, fps, aspect, resolution, transparent, setPlayhead, pause, onProgress }) {
   pause()
   const total = Math.max(1, Math.round(duration * fps))
   const { w, h } = targetSize(aspect, resolution)
   const out = document.createElement('canvas')
   out.width = w
   out.height = h
-  const ctx = out.getContext('2d')
+  const ctx = out.getContext('2d', { alpha: !!transparent })
 
   const files = []
   for (let i = 0; i < total; i++) {
     setPlayhead(i / fps)
     await settle(3)               // wait for R3F to render the new playhead position
+    if (transparent) ctx.clearRect(0, 0, w, h)
     drawCover(ctx, srcCanvas, w, h)
     const blob = await new Promise(res => out.toBlob(res, 'image/png'))
     files.push({ name: `frame_${String(i).padStart(4, '0')}.png`, data: new Uint8Array(await blob.arrayBuffer()) })
@@ -128,9 +122,7 @@ export async function exportImageSequence({ srcCanvas, duration, fps, aspect, re
  * frame-pump hacks.  The tradeoff is that export runs at real-time speed (a 6 s clip
  * takes ~6 s to capture), which is fine for typical short animations.
  */
-export async function exportVideo({ srcCanvas, duration, fps, aspect, resolution, quality, setPlayhead, pause, play, onProgress }) {
-  const qualityPreset = QUALITIES.find(q => q.value === quality) ?? QUALITIES[1]
-
+export async function exportVideo({ srcCanvas, duration, fps, aspect, resolution, setPlayhead, pause, play, onProgress }) {
   // ── offscreen crop canvas ─────────────────────────────────────────────────
   const { w, h } = targetSize(aspect, resolution)
   const out = document.createElement('canvas')
@@ -150,7 +142,7 @@ export async function exportVideo({ srcCanvas, duration, fps, aspect, resolution
   // ── MediaRecorder setup ───────────────────────────────────────────────────
   const stream = out.captureStream(fps)   // automatic capture at fps — no requestFrame needed
   const mime = pickVideoMime()
-  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: qualityPreset.videoBitsPerSecond })
+  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: VIDEO_BITS_PER_SECOND })
   const chunks = []
   recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data) }
   const done = new Promise(res => { recorder.onstop = res })

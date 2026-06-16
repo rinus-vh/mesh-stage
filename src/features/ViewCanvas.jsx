@@ -1,15 +1,19 @@
 import * as THREE from 'three'
 import { Suspense, useEffect, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, Environment } from '@react-three/drei'
 
-import { useCamera } from './contexts/CameraContext.jsx'
-import { useTimeline } from './contexts/TimelineContext.jsx'
-import { useRotation } from './contexts/RotationContext.jsx'
-import { useEffectiveModelSettings } from './contexts/useAnimatable.js'
+import { useCameraContext } from '@/contexts/CameraContext.jsx'
+import { useTimelineContext } from '@/contexts/TimelineContext.jsx'
+import { useRotationContext } from '@/contexts/RotationContext.jsx'
+import { useEffectiveModelSettings } from '@/contexts/useAnimatable.js'
 import { Model } from './Model.jsx'
 
 import styles from './ViewCanvas.module.css'
+
+// Shared scratch objects — allocated once, reused every frame to avoid GC pressure.
+const _sph = new THREE.Spherical()
+const _sphTarget = new THREE.Spherical()
 
 // Drives the camera from the timeline sample when camera tracks exist.
 function CameraAnimator({ sampleRef, controlsRef, active }) {
@@ -24,73 +28,86 @@ function CameraAnimator({ sampleRef, controlsRef, active }) {
     if (z === undefined && ox === undefined && oy === undefined) return
 
     const cam = controls.object
-    const sph = new THREE.Spherical().setFromVector3(cam.position)
-    const radius = z !== undefined ? 11 - z : sph.radius
-    const theta = ox !== undefined ? THREE.MathUtils.degToRad(ox) : sph.theta
-    const phi = oy !== undefined ? THREE.MathUtils.degToRad(90 - oy) : sph.phi
-    cam.position.setFromSpherical(new THREE.Spherical(radius, phi, theta))
+    _sph.setFromVector3(cam.position)
+    const radius = z !== undefined ? 11 - z : _sph.radius
+    const theta = ox !== undefined ? THREE.MathUtils.degToRad(ox) : _sph.theta
+    const phi = oy !== undefined ? THREE.MathUtils.degToRad(90 - oy) : _sph.phi
+    _sphTarget.set(radius, phi, theta)
+    cam.position.setFromSpherical(_sphTarget)
     controls.update()
   })
   return null
 }
 
 export function ViewCanvas({ modelRef, modelUrl }) {
-  const { cameraRef, controlsRef, glRef, handleZoomChange, handleOrbitChange, orbitX, orbitY, zoom, height } = useCamera()
-  const { rotation } = useRotation()
-  const { sampleRef, tracks } = useTimeline()
+  const { cameraRef, controlsRef, glRef, handleZoomChange, handleOrbitChange, orbitX, orbitY, zoom, height } = useCameraContext()
+  const { rotation } = useRotationContext()
+  const { sampleRef, tracks } = useTimelineContext()
   const modelSettings = useEffectiveModelSettings()
 
-  const isUpdatingFromKnobs = useRef(false)
+  const isUpdatingFromKnobsRef = useRef(false)
   const sceneRef = useRef(null)
 
   const hasCameraTracks = tracks.some(t => t.path.startsWith('camera.') && !t.muted)
 
   useEffect(() => {
-    if (sceneRef.current) {
+    if (!sceneRef.current) return
+    if (modelSettings.transparentBackground) {
+      sceneRef.current.background = null
+    } else {
       sceneRef.current.background = new THREE.Color(modelSettings.backgroundColor)
     }
-  }, [modelSettings.backgroundColor])
+  }, [modelSettings.backgroundColor, modelSettings.transparentBackground])
 
   // Manual orbit knob → camera (only relevant when the timeline isn't driving the camera).
   useEffect(() => {
-    if (hasCameraTracks || !controlsRef.current || isUpdatingFromKnobs.current) return
-    isUpdatingFromKnobs.current = true
+    if (hasCameraTracks || !controlsRef.current || isUpdatingFromKnobsRef.current) return
     const controls = controlsRef.current
     const camera = controls.object
-    // Offset from target (not world origin) so radius stays correct
     const offset = camera.position.clone().sub(controls.target)
+    const sph = new THREE.Spherical().setFromVector3(offset)
+    const currentOrbitX = THREE.MathUtils.radToDeg(sph.theta)
+    const currentOrbitY = 90 - THREE.MathUtils.radToDeg(sph.phi)
+    // Skip if OrbitControls already positioned the camera here (avoids feedback jitter).
+    if (Math.abs(currentOrbitX - orbitX) < 0.01 && Math.abs(currentOrbitY - orbitY) < 0.01) return
+    isUpdatingFromKnobsRef.current = true
     const radius = offset.length()
     const theta = THREE.MathUtils.degToRad(orbitX)
     const phi   = THREE.MathUtils.degToRad(90 - orbitY)
     const newOffset = new THREE.Vector3().setFromSpherical(new THREE.Spherical(radius, phi, theta))
     camera.position.copy(controls.target).add(newOffset)
     controls.update()
-    isUpdatingFromKnobs.current = false
+    isUpdatingFromKnobsRef.current = false
   }, [orbitX, orbitY, controlsRef, hasCameraTracks])
 
   // Height shifts the orbit target (and camera in tandem) along Y so the radius is preserved.
   useEffect(() => {
     if (!controlsRef.current) return
+    isUpdatingFromKnobsRef.current = true
     const controls = controlsRef.current
     const prevY = controls.target.y
     const delta = height - prevY
     controls.target.set(0, height, 0)
     controls.object.position.y += delta
     controls.update()
+    isUpdatingFromKnobsRef.current = false
   }, [height, controlsRef])
 
   useEffect(() => {
-    if (hasCameraTracks || !controlsRef.current || isUpdatingFromKnobs.current) return
-    isUpdatingFromKnobs.current = true
+    if (hasCameraTracks || !controlsRef.current || isUpdatingFromKnobsRef.current) return
     const camera = controlsRef.current.object
+    const currentZoom = 11 - camera.position.length()
+    // Skip if OrbitControls already positioned the camera here (avoids feedback jitter).
+    if (Math.abs(currentZoom - zoom) < 0.001) return
+    isUpdatingFromKnobsRef.current = true
     const dir = camera.position.clone().normalize()
     camera.position.copy(dir.multiplyScalar(11 - zoom))
     controlsRef.current.update()
-    isUpdatingFromKnobs.current = false
+    isUpdatingFromKnobsRef.current = false
   }, [zoom, controlsRef, hasCameraTracks])
 
   return (
-    <div className={styles.viewCanvas_root}>
+    <div className={cx(styles.component_root, modelSettings.transparentBackground && styles.isTransparent)}>
       <Canvas
         camera={{ position: [0, 0, 11 - zoom], fov: 50 }}
         gl={{ preserveDrawingBuffer: true, alpha: true }}
@@ -100,7 +117,7 @@ export function ViewCanvas({ modelRef, modelUrl }) {
           cameraRef.current = camera
           sceneRef.current = scene
           glRef.current = gl
-          scene.background = new THREE.Color(modelSettings.backgroundColor)
+          scene.background = modelSettings.transparentBackground ? null : new THREE.Color(modelSettings.backgroundColor)
         }}
       >
         <ambientLight intensity={0.5} />
@@ -117,27 +134,31 @@ export function ViewCanvas({ modelRef, modelUrl }) {
           />
         )}
 
+        {modelSettings.materialPreset === 'chrome' && (
+          <Environment preset='studio' />
+        )}
+
         <Suspense fallback={null}>
           <Model
             ref={modelRef}
             url={modelUrl}
             baseRotation={rotation}
-            sampleRef={sampleRef}
-            {...{ modelSettings }}
+            {...{ sampleRef, modelSettings }}
           />
         </Suspense>
 
-        <CameraAnimator sampleRef={sampleRef} controlsRef={controlsRef} active={hasCameraTracks} />
+        <CameraAnimator active={hasCameraTracks} {...{ sampleRef, controlsRef }} />
 
         <OrbitControls
           makeDefault
           ref={controlsRef}
           enabled={!hasCameraTracks}
           enableDamping={false}
+          enablePan={false}
           minDistance={1}
           maxDistance={10}
           onChange={() => {
-            if (!controlsRef.current || isUpdatingFromKnobs.current || hasCameraTracks) return
+            if (!controlsRef.current || isUpdatingFromKnobsRef.current || hasCameraTracks) return
             const camera = controlsRef.current.object
             const newZoom = 11 - camera.position.length()
             const spherical = new THREE.Spherical().setFromVector3(camera.position)

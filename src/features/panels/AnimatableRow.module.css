@@ -1,8 +1,8 @@
 /* Small dot shown inside the row when a timeline track exists for that path. */
 
 .dot {
-  width: 6px;
-  height: 6px;
+  width: var(--size-8);
+  height: var(--size-8);
   border-radius: var(--radius-circle);
   background-color: var(--interaction-color);
   border: none;

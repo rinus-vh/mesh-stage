@@ -3,6 +3,7 @@ import globals from 'globals'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+import r3fPlugin from '@react-three/eslint-plugin'
 import stylistic from '@stylistic/eslint-plugin'
 import { createRequire } from 'node:module'
 
@@ -17,6 +18,12 @@ export default [
 
   // Base JS recommended
   js.configs.recommended,
+
+  // React Three Fiber — adds R3F-specific rules (no-clone-in-loop, no-new-in-loop)
+  {
+    plugins: { '@react-three': r3fPlugin },
+    rules: r3fPlugin.configs.recommended.rules,
+  },
 
   // Node scripts
   {
@@ -60,6 +67,25 @@ export default [
       'react/react-in-jsx-scope': 'off',       // Not needed with Vite + React 17+
       'react/prop-types': 'off',        // JSDoc serves as prop documentation in this template
       'react/self-closing-comp': 'warn',
+      // React Three Fiber JSX uses Three.js-specific props that the base rule doesn't know about.
+      // We extend the ignore list rather than disabling the rule so real typos still surface.
+      'react/no-unknown-property': ['error', {
+        ignore: [
+          // Three.js geometry / mesh props
+          'args', 'attach', 'position', 'rotation', 'scale', 'up',
+          'receiveShadow', 'castShadow', 'object', 'geometry', 'material',
+          // Light props
+          'intensity', 'angle', 'penumbra', 'decay', 'distance', 'color',
+          'target', 'groundColor',
+          // Shadow props
+          'shadow-mapSize', 'shadow-bias', 'shadow-radius', 'shadow-camera-far',
+          'shadow-camera-near', 'shadow-camera-left', 'shadow-camera-right',
+          'shadow-camera-top', 'shadow-camera-bottom',
+          // Camera / control props
+          'fov', 'near', 'far', 'makeDefault', 'enableDamping', 'enablePan',
+          'minDistance', 'maxDistance',
+        ],
+      }],
       'react/jsx-curly-brace-presence': ['warn', { props: 'never', children: 'never' }],
 
       // Hooks

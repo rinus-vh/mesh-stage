@@ -1,17 +1,21 @@
-import { Settings, RotateCcw } from 'lucide-react'
+import { Settings, Trash2 } from 'lucide-react'
 import {
-  PanelContainer, PanelContainerSettingsRow, PanelContainerDivider,
-  Knob, Slider, Checkbox, LabelUppercaseSm, ColorInput,
+  PanelContainer, PanelContainerSettingsRow,
+  PanelContainerSettingsSectionHeader,
+  ActionIconButton,
+  GhostButton, Knob, Slider, Checkbox, ColorInput,
 } from '@6njp/prototype-library'
 
-import { useRotation, ROTATION_DEFAULTS } from './contexts/RotationContext.jsx'
-import { useCamera, CAMERA_DEFAULTS } from './contexts/CameraContext.jsx'
-import { useModelSettings, MODEL_DEFAULTS } from './contexts/ModelSettingsContext.jsx'
-import { useTimeline } from './contexts/TimelineContext.jsx'
-import { useAnimatableModelSettings } from './contexts/useAnimatable.js'
+import { CAMERA_DEFAULTS } from '@/constants/cameraDefaults.js'
+import { MODEL_DEFAULTS } from '@/constants/modelSettings.js'
+import { useCameraContext } from '@/contexts/CameraContext.jsx'
+import { useModelSettingsContext } from '@/contexts/ModelSettingsContext.jsx'
+import { useRotationContext } from '@/contexts/RotationContext.jsx'
+import { useTimelineContext } from '@/contexts/TimelineContext.jsx'
+import { useAnimatableModelSettings } from '@/contexts/useAnimatable.js'
 import { AnimatableRow } from './panels/AnimatableRow.jsx'
-import animatableStyles from './panels/AnimatableRow.module.css'
 
+import animatableStyles from './panels/AnimatableRow.module.css'
 import styles from './SettingsContent.module.css'
 
 const AXES = [
@@ -30,20 +34,20 @@ const SCENE_SECTION_KEYS = ['showGroundPlane', 'groundPlane', 'gravity']
 
 function deepEqual(a, b) {
   if (a === b) return true
-  if (a == null || b == null) return a === b
+  if (a === null || a === undefined || b === null || b === undefined) return a === b
   if (typeof a !== 'object') return a === b
   const ka = Object.keys(a), kb = Object.keys(b)
   if (ka.length !== kb.length) return false
   return ka.every(k => deepEqual(a[k], b[k]))
 }
 
-export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpenMaterial, onOpenTexture, onOpenBumpMap, onOpenExport, onOpenGroundPlane }) {
+export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpenMaterial, onOpenTexture, onOpenBumpMap, onOpenExport, onOpenGroundPlane, onDiscardModel }) {
   // Effective (animated) settings for display; base for dirty checks / resets.
   const { modelSettings, update } = useAnimatableModelSettings()
-  const { modelSettings: base, update: baseUpdate, backgroundIsDefault, resetBackground } = useModelSettings()
-  const { rotation, setAxisDeg, resetRotation } = useRotation()
-  const { zoom, orbitX, orbitY, height, handleZoomChange, handleOrbitChange, handleHeightChange, resetCamera } = useCamera()
-  const { tracks, record, liveSample, removeTrack } = useTimeline()
+  const { modelSettings: base, update: baseUpdate, backgroundIsDefault, resetBackground, groundPlaneColorIsDefault, resetGroundPlane } = useModelSettingsContext()
+  const { rotation, setAxisDeg, resetRotation } = useRotationContext()
+  const { zoom, orbitX, orbitY, height, handleZoomChange, handleOrbitChange, handleHeightChange, resetCamera, controlsRef } = useCameraContext()
+  const { tracks, record, liveSample, removeTrack } = useTimelineContext()
 
   const themeDefaultBg = isDark ? '#111111' : '#ffffff'
 
@@ -74,11 +78,19 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
 
   const isSceneDirty = (
     !backgroundIsDefault ||
-    SCENE_SECTION_KEYS.some(k =>
-      typeof MODEL_DEFAULTS[k] === 'object'
+    !groundPlaneColorIsDefault ||
+    SCENE_SECTION_KEYS.some(k => {
+      if (k === 'groundPlane') {
+        // Color is tracked separately via groundPlaneColorIsDefault; only compare
+        // the non-color fields here to avoid false positives from theme switching.
+        const { color: _a, ...baseRest } = base.groundPlane ?? {}
+        const { color: _b, ...defaultRest } = MODEL_DEFAULTS.groundPlane
+        return !deepEqual(baseRest, defaultRest)
+      }
+      return typeof MODEL_DEFAULTS[k] === 'object'
         ? !deepEqual(base[k], MODEL_DEFAULTS[k])
         : base[k] !== MODEL_DEFAULTS[k]
-    )
+    })
   )
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -121,15 +133,21 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
   const handleResetCamera = () => {
     resetCamera()
     clearTracks(['camera'])
+    if (controlsRef.current) {
+      controlsRef.current.target.set(0, 0, 0)
+      controlsRef.current.update()
+    }
   }
 
   const handleResetScene = () => {
+    const themeDefaultGroundPlaneColor = isDark ? '#ffffff' : '#000000'
     baseUpdate({
       showGroundPlane: MODEL_DEFAULTS.showGroundPlane,
-      groundPlane: MODEL_DEFAULTS.groundPlane,
+      groundPlane: { ...MODEL_DEFAULTS.groundPlane, color: themeDefaultGroundPlaneColor },
       gravity: MODEL_DEFAULTS.gravity,
     })
     resetBackground(themeDefaultBg)
+    resetGroundPlane(themeDefaultGroundPlaneColor)
     clearTracks(['model.backgroundColor', 'model.showGroundPlane', 'model.groundPlane', 'model.gravity'])
   }
 
@@ -177,12 +195,24 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
 
       <Section title='Model' dirty={isModelDirty} onReset={handleResetModel}>
         <PanelContainer>
-          <AnimatableRow label='Wireframe' path='model.wireframe'>
+          <AnimatableRow
+            label='Wireframe'
+            path='model.wireframe'
+            value={modelSettings.wireframe}
+            defaultValue={MODEL_DEFAULTS.wireframe}
+            onReset={() => update({ wireframe: MODEL_DEFAULTS.wireframe })}
+          >
             <Checkbox checked={modelSettings.wireframe} onChange={v => update({ wireframe: v })} />
             <SettingsButton onClick={onOpenWireframe} title='Wireframe settings' />
           </AnimatableRow>
 
-          <AnimatableRow label='Lighting' path='model.lighting'>
+          <AnimatableRow
+            label='Lighting'
+            path='model.lighting'
+            value={modelSettings.lighting}
+            defaultValue={MODEL_DEFAULTS.lighting}
+            onReset={() => update({ lighting: MODEL_DEFAULTS.lighting })}
+          >
             <Checkbox checked={modelSettings.lighting} onChange={v => update({ lighting: v })} />
             <SettingsButton onClick={onOpenLighting} title='Lighting settings' />
           </AnimatableRow>
@@ -211,6 +241,7 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
             label='Resolution'
           />
         </div>
+
       </Section>
 
       <Section title='Camera' dirty={isCameraDirty} onReset={handleResetCamera}>
@@ -264,14 +295,33 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
 
       <Section title='Scene' dirty={isSceneDirty} onReset={handleResetScene}>
         <PanelContainer>
-          <AnimatableRow label='Background' path='model.backgroundColor'>
+          <PanelContainerSettingsRow label='Transparent'>
+            <Checkbox
+              checked={modelSettings.transparentBackground ?? false}
+              onChange={v => update({ transparentBackground: v })}
+            />
+          </PanelContainerSettingsRow>
+
+          <AnimatableRow
+            label='Background'
+            path='model.backgroundColor'
+            value={modelSettings.backgroundColor}
+            defaultValue={MODEL_DEFAULTS.backgroundColor}
+            onReset={() => update({ backgroundColor: MODEL_DEFAULTS.backgroundColor })}
+          >
             <ColorInput
               value={modelSettings.backgroundColor}
               onChange={v => update({ backgroundColor: v })}
             />
           </AnimatableRow>
 
-          <AnimatableRow label='Ground plane' path='model.showGroundPlane'>
+          <AnimatableRow
+            label='Ground plane'
+            path='model.showGroundPlane'
+            value={modelSettings.showGroundPlane}
+            defaultValue={MODEL_DEFAULTS.showGroundPlane}
+            onReset={() => update({ showGroundPlane: MODEL_DEFAULTS.showGroundPlane })}
+          >
             <Checkbox checked={modelSettings.showGroundPlane} onChange={value => update({ showGroundPlane: value })} />
             <SettingsButton onClick={onOpenGroundPlane} title='Ground plane settings' />
           </AnimatableRow>
@@ -282,13 +332,24 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
         </PanelContainer>
       </Section>
 
-      <Section title='Export'>
-        <PanelContainer>
-          <PanelContainerSettingsRow label='Export settings'>
-            <SettingsButton onClick={onOpenExport} title='Export settings' />
-          </PanelContainerSettingsRow>
-        </PanelContainer>
-      </Section>
+      <div className={styles.bottomActions}>
+        <GhostButton
+          label='Export settings'
+          icon={Settings}
+          color='white'
+          onClick={onOpenExport}
+          layoutClassName={styles.bottomActionLayout}
+        />
+        {onDiscardModel && (
+          <GhostButton
+            label='Discard model'
+            icon={Trash2}
+            color='orange'
+            onClick={onDiscardModel}
+            layoutClassName={styles.bottomActionLayout}
+          />
+        )}
+      </div>
     </div>
   )
 }
@@ -296,47 +357,35 @@ export function SettingsContent({ isDark, onOpenWireframe, onOpenLighting, onOpe
 // A standalone track indicator dot (same visual as AnimatableRow's dot) for use
 // outside of PanelContainerSettingsRow — e.g. above a Knob in a grid layout.
 function TrackDot({ path, dotClassName }) {
-  const { tracks, setTrackMuted } = useTimeline()
+  const { tracks, setTrackMuted } = useTimelineContext()
   const track = path ? tracks.find(t => t.path === path) : null
   if (!track) return null
+
   return (
     <button
       type='button'
-      className={cx(animatableStyles.dot, track.muted && animatableStyles.dotMuted, dotClassName)}
       onClick={() => setTrackMuted(track.id, !track.muted)}
       title={track.muted ? 'Track disabled — click to reactivate' : 'Has keyframes — click to disable track'}
+      className={cx(animatableStyles.dot, track.muted && animatableStyles.dotMuted, dotClassName)}
     />
   )
 }
 
 function SettingsButton({ onClick, title }) {
   return (
-    <button
-      type='button'
-      className={cx(styles.componentSettingsButton, styles.component_rootSettingsButton)}
+    <ActionIconButton
+      icon={Settings}
+      size={20}
+      style='outline'
       {...{ onClick, title }}
-    >
-      <Settings size={13} />
-    </button>
+    />
   )
 }
 
 function Section({ title, children, dirty = false, onReset }) {
   return (
     <div className={styles.componentSection}>
-      <div className={styles.sectionHeader}>
-        <LabelUppercaseSm layoutClassName={styles.sectionTitleLayout}>{title}</LabelUppercaseSm>
-        {dirty && onReset && (
-          <button
-            type='button'
-            className={styles.resetButton}
-            onClick={onReset}
-            title={`Reset ${title} to defaults`}
-          >
-            <RotateCcw size={11} />
-          </button>
-        )}
-      </div>
+      <PanelContainerSettingsSectionHeader isDirty={dirty} {...{ title, onReset }} />
       <div className={styles.sectionBody}>{children}</div>
     </div>
   )
