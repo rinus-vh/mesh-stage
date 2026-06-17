@@ -4,7 +4,7 @@
   width: var(--size-8);
   height: var(--size-8);
   border-radius: var(--radius-circle);
-  background-color: var(--interaction-color);
+  background-color: var(--dynamic-color);
   border: none;
   cursor: pointer;
   padding: 0;

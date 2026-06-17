@@ -40,8 +40,8 @@
 
 .iconBtnActive {
   opacity: 1;
-  color: var(--interaction-color);
-  background-color: color-mix(in srgb, var(--interaction-color) 15%, transparent);
+  color: var(--dynamic-color);
+  background-color: color-mix(in srgb, var(--dynamic-color) 15%, transparent);
 }
 
 .snapWrapper {
@@ -147,8 +147,8 @@
 
 .fpsBtnActive {
   opacity: 1;
-  color: var(--interaction-color);
-  background-color: color-mix(in srgb, var(--interaction-color) 15%, transparent);
+  color: var(--dynamic-color);
+  background-color: color-mix(in srgb, var(--dynamic-color) 15%, transparent);
 }
 
 .iconBtnDanger {
@@ -317,8 +317,8 @@
 }
 
 .keyframeSelected {
-  background-color: var(--interaction-color);
-  border-color: var(--interaction-color);
+  background-color: var(--dynamic-color);
+  border-color: var(--dynamic-color);
 }
 
 .playhead {
@@ -327,14 +327,14 @@
   bottom: 0;
   width: 2px;
   margin-left: -1px;
-  background-color: var(--interaction-color);
+  background-color: var(--dynamic-color);
   pointer-events: none;
 }
 
 .marquee {
   position: absolute;
-  border: 1px solid var(--interaction-color);
-  background-color: color-mix(in srgb, var(--interaction-color) 12%, transparent);
+  border: 1px solid var(--dynamic-color);
+  background-color: color-mix(in srgb, var(--dynamic-color) 12%, transparent);
   pointer-events: none;
   z-index: 1;
 }

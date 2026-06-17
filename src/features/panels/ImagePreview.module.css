@@ -49,6 +49,6 @@
   backdrop-filter: blur(4px);
 
   &:hover {
-    background-color: var(--interaction-color);
+    background-color: var(--dynamic-color);
   }
 }
