@@ -77,13 +77,16 @@ function ThemeBackgroundSync({ isDark }) {
 function AppPanels({ isDark }) {
   // Model state lifted here so the ViewCanvas survives panel minimize/unmount.
   const [modelUrl, setModelUrl] = useState(null)
+  const [modelFileType, setModelFileType] = useState(null)
   const modelRef = useRef(null)
   const handleModelFile = useCallback((file) => {
+    setModelFileType(file.name.split('.').pop().toLowerCase())
     setModelUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file) })
   }, [])
 
   const handleDiscardModel = useCallback(() => {
     setModelUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null })
+    setModelFileType(null)
   }, [])
 
   const settings   = usePanelManager('settings',  'Settings')
@@ -106,7 +109,7 @@ function AppPanels({ isDark }) {
        */}
       {!viewport.visible && modelUrl && createPortal(
         <div style={{ position: 'fixed', left: '-400px', top: 0, width: '200px', height: '200px', visibility: 'hidden', pointerEvents: 'none' }}>
-          <ViewCanvas {...{ modelRef, modelUrl }} />
+          <ViewCanvas {...{ modelRef, modelUrl, modelFileType }} />
         </div>,
         document.body,
       )}
@@ -141,7 +144,7 @@ function AppPanels({ isDark }) {
           minHeight={6}
           onMinimize={viewport.minimize}
         >
-          <ViewportContent onFile={handleModelFile} {...{ modelRef, modelUrl }} />
+          <ViewportContent onFile={handleModelFile} {...{ modelRef, modelUrl, modelFileType }} />
         </Panel>
       )}
 

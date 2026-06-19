@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { useRef, useEffect, useState, forwardRef, useImperativeHandle, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 
 // ─── Ground plane ─────────────────────────────────────────────────────────────
 
@@ -44,7 +45,7 @@ const GRAVITY_Y_OFFSET = -0.5
  * @param props.baseRotation  static pose per axis in radians { x, y, z }
  * @param props.sampleRef      ref holding the timeline's live sample map
  */
-export const Model = forwardRef(function Model({ url, baseRotation, modelSettings, sampleRef }, ref) {
+export const Model = forwardRef(function Model({ url, fileType, baseRotation, modelSettings, sampleRef }, ref) {
   const groupRef = useRef(null)
   const [model, setModel] = useState(null)
   const [originalGeometries, setOriginalGeometries] = useState(new Map())
@@ -57,7 +58,7 @@ export const Model = forwardRef(function Model({ url, baseRotation, modelSetting
   const bump = modelSettings.bumpMap
 
   useEffect(() => {
-    const loader = new FBXLoader()
+    const loader = fileType === 'obj' ? new OBJLoader() : new FBXLoader()
     loader.loadAsync(url).then(loaded => {
       const box = new THREE.Box3().setFromObject(loaded)
       const center = box.getCenter(new THREE.Vector3())
@@ -75,7 +76,7 @@ export const Model = forwardRef(function Model({ url, baseRotation, modelSetting
       setOriginalGeometries(geometries)
       setModel(loaded)
     }).catch(err => console.error('Model load error:', err))
-  }, [url])
+  }, [url, fileType])
 
   // ── Structural rebuild: geometry, material kind, maps. Keyed on coarse props
   //    that genuinely require recreating objects — NOT the per-frame scalars. ──

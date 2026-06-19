@@ -39,7 +39,7 @@ function CameraAnimator({ sampleRef, controlsRef, active }) {
   return null
 }
 
-export function ViewCanvas({ modelRef, modelUrl }) {
+export function ViewCanvas({ modelRef, modelUrl, modelFileType }) {
   const { cameraRef, controlsRef, glRef, handleZoomChange, handleOrbitChange, orbitX, orbitY, zoom, height } = useCameraContext()
   const { rotation } = useRotationContext()
   const { sampleRef, tracks } = useTimelineContext()
@@ -142,6 +142,7 @@ export function ViewCanvas({ modelRef, modelUrl }) {
           <Model
             ref={modelRef}
             url={modelUrl}
+            fileType={modelFileType}
             baseRotation={rotation}
             {...{ sampleRef, modelSettings }}
           />
